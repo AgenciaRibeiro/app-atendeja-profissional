@@ -18,7 +18,7 @@ try {
       const match = /^\s*([\w.-]+)\s*=\s*(.*)?\s*$/.exec(line);
       if (match && process.env[match[1]] === undefined) {
         let val = (match[2] || "").trim();
-        if ((val.startsWith(""") && val.endsWith(""")) || (val.startsWith("'") && val.endsWith("'"))) {
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
           val = val.slice(1, -1);
         }
         process.env[match[1]] = val;
