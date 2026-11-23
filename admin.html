@@ -120,6 +120,11 @@
           <span class="nav-icon">📋</span>
           <span class="nav-label">Planos</span>
         </button>
+        <button class="sidebar-item tab highlight-lp" data-section="edit-lp" type="button">
+          <span class="nav-icon">🎨</span>
+          <span class="nav-label">Editar - LP</span>
+          <span class="nav-tag lp-tag">Novo</span>
+        </button>
 
         <div class="nav-section-title">INTELIGÊNCIA ARTIFICIAL</div>
         <button class="sidebar-item tab highlight-ai" data-section="ai-assistant" type="button">
@@ -297,16 +302,300 @@
       <section id="section-plans" class="panel data-section" hidden>
         <div class="section-heading">
           <div>
-            <h2>Planos Cadastrados</h2>
-            <p class="muted">Catálogo oficial de planos e limites da plataforma.</p>
+            <h2>Planos e Preços</h2>
+            <p class="muted">Gerencie e altere valores, limites de assistentes, cotas de APIs e recursos de cada plano.</p>
           </div>
+          <span class="badge active" id="plans-count-badge">Catálogo Oficial</span>
         </div>
+
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Plano</th><th>Preço mensal</th><th>Assistentes</th><th>APIs</th><th>Planejamento mensal</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nome do Plano</th>
+                <th>Preço Mensal</th>
+                <th>Assistentes</th>
+                <th>APIs</th>
+                <th>Planejamento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
             <tbody id="plans-body"></tbody>
           </table>
         </div>
+
+        <!-- Editor de Plano (Incluso no Dashboard) -->
+        <div id="plan-edit-card" class="panel plan-editor-box" hidden>
+          <div class="card-head-row">
+            <div>
+              <h3 id="plan-editor-title">Editar Plano</h3>
+              <p class="muted subline-card">Altere o nome, valor e limites deste plano diretamente no Supabase.</p>
+            </div>
+            <button id="btn-close-plan-editor" class="button quiet small-btn" type="button">Fechar Editor ✕</button>
+          </div>
+          <form id="plan-edit-form" class="plan-form-grid">
+            <input type="hidden" id="edit-plan-code">
+            <div class="field-item">
+              <label for="edit-plan-name">Nome de Exibição do Plano</label>
+              <input type="text" id="edit-plan-name" required placeholder="Ex.: Essencial">
+            </div>
+            <div class="field-item">
+              <label for="edit-plan-price">Preço Mensal (R$)</label>
+              <input type="number" id="edit-plan-price" step="0.01" min="0" required placeholder="Ex.: 49.00">
+            </div>
+            <div class="field-item">
+              <label for="edit-plan-assistants">Máximo de Assistentes</label>
+              <input type="number" id="edit-plan-assistants" min="0" max="99" required placeholder="Ex.: 1">
+            </div>
+            <div class="field-item">
+              <label for="edit-plan-apis">Máximo de APIs Conectadas</label>
+              <input type="number" id="edit-plan-apis" min="0" max="999" required placeholder="Ex.: 2 (99 = Ilimitado)">
+            </div>
+            <div class="field-item">
+              <label for="edit-plan-planning">Planejamento Mensal</label>
+              <select id="edit-plan-planning">
+                <option value="true">Sim (Habilitado)</option>
+                <option value="false">Não (Desabilitado)</option>
+              </select>
+            </div>
+            <div class="field-item full-col">
+              <label for="edit-plan-capabilities">Capacidades / Permissões (separadas por vírgula)</label>
+              <input type="text" id="edit-plan-capabilities" placeholder="Ex.: atendimento, cotacao, vendas, crm_auto">
+              <small class="muted">Lista de permissões ativadas para este plano no sistema.</small>
+            </div>
+            <div class="form-actions full-col">
+              <button type="submit" id="btn-save-plan" class="button primary">Salvar Alterações do Plano</button>
+              <button type="button" id="btn-cancel-plan-edit" class="button quiet">Cancelar</button>
+              <span id="plan-edit-message" class="message" role="status"></span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- SEÇÃO NOVA: EDITAR - LP -->
+      <section id="section-edit-lp" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Editar Landing Page</h2>
+            <p class="muted">Personalize todos os textos, títulos, imagens e links da página inicial na mesma ordem do site.</p>
+          </div>
+          <div class="lp-top-actions">
+            <a href="/" target="_blank" class="button quiet">👁️ Visualizar LP</a>
+            <button type="button" id="btn-save-lp-top" class="button primary">💾 Salvar Alterações</button>
+          </div>
+        </div>
+
+        <form id="form-edit-lp" class="lp-editor-form">
+          <p id="lp-edit-message" class="message" role="status"></p>
+
+          <!-- 01. TOPO & NAVEGAÇÃO -->
+          <fieldset class="lp-fieldset">
+            <legend class="lp-legend">
+              <span class="step-num">01</span> Topo & Navegação (Header)
+            </legend>
+            <div class="fields-grid">
+              <div class="field-item">
+                <label for="lp-header-brand">Nome da Marca / Wordmark</label>
+                <input type="text" id="lp-header-brand" name="header_brand" placeholder='Atende<span class="brand-accent">Já</span>'>
+              </div>
+              <div class="field-item">
+                <label for="lp-header-btn-text">Texto do Botão CTA (Topo)</label>
+                <input type="text" id="lp-header-btn-text" name="header_btn_text" placeholder="Começar agora">
+              </div>
+              <div class="field-item">
+                <label for="lp-header-btn-url">Link do Botão CTA (Topo)</label>
+                <input type="text" id="lp-header-btn-url" name="header_btn_url" placeholder="#planos">
+              </div>
+            </div>
+            <div class="fields-grid three-cols" style="margin-top:10px;">
+              <div class="field-item">
+                <label for="lp-nav-link1-text">Menu 1: Texto</label>
+                <input type="text" id="lp-nav-link1-text" name="nav_link1_text" placeholder="Como funciona">
+                <label for="lp-nav-link1-url" class="sub-label">Menu 1: Destino / Âncora</label>
+                <input type="text" id="lp-nav-link1-url" name="nav_link1_url" placeholder="#como-funciona">
+              </div>
+              <div class="field-item">
+                <label for="lp-nav-link2-text">Menu 2: Texto</label>
+                <input type="text" id="lp-nav-link2-text" name="nav_link2_text" placeholder="Nichos">
+                <label for="lp-nav-link2-url" class="sub-label">Menu 2: Destino / Âncora</label>
+                <input type="text" id="lp-nav-link2-url" name="nav_link2_url" placeholder="#nichos">
+              </div>
+              <div class="field-item">
+                <label for="lp-nav-link3-text">Menu 3: Texto</label>
+                <input type="text" id="lp-nav-link3-text" name="nav_link3_text" placeholder="Planos">
+                <label for="lp-nav-link3-url" class="sub-label">Menu 3: Destino / Âncora</label>
+                <input type="text" id="lp-nav-link3-url" name="nav_link3_url" placeholder="#planos">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 02. HERO SECTION -->
+          <fieldset class="lp-fieldset">
+            <legend class="lp-legend">
+              <span class="step-num">02</span> Seção Principal (Hero)
+            </legend>
+            <div class="fields-grid">
+              <div class="field-item full-col">
+                <label for="lp-hero-eyebrow">Selo / Eyebrow (Topo do Hero)</label>
+                <input type="text" id="lp-hero-eyebrow" name="hero_eyebrow" placeholder="ATENDIMENTO IMEDIATO • CONTROLE DE ORÇAMENTOS">
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-hero-title">Título Principal (H1)</label>
+                <textarea id="lp-hero-title" name="hero_title" rows="2" placeholder="Pare de perder clientes por demora no WhatsApp."></textarea>
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-hero-subtitle">Subtítulo Explicativo</label>
+                <textarea id="lp-hero-subtitle" name="hero_subtitle" rows="2" placeholder="Responda leads em segundos, organize seus orçamentos e nunca mais esqueça um retorno combinado."></textarea>
+              </div>
+              <div class="field-item">
+                <label for="lp-hero-btn-primary-text">Botão Principal (Texto)</label>
+                <input type="text" id="lp-hero-btn-primary-text" name="hero_btn_primary_text" placeholder="Escolher meu plano">
+              </div>
+              <div class="field-item">
+                <label for="lp-hero-btn-primary-url">Botão Principal (Link)</label>
+                <input type="text" id="lp-hero-btn-primary-url" name="hero_btn_primary_url" placeholder="#planos">
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-hero-btn-secondary-text">Botão Secundário (Texto)</label>
+                <input type="text" id="lp-hero-btn-secondary-text" name="hero_btn_secondary_text" placeholder="Testar agora">
+              </div>
+            </div>
+
+            <!-- Card de Demonstração / Fluxo -->
+            <div class="sub-card-box">
+              <h4>Card de Demonstração (Fluxo em Tempo Real)</h4>
+              <div class="fields-grid">
+                <div class="field-item full-col">
+                  <label for="lp-hero-preview-title">Título da Prévia</label>
+                  <input type="text" id="lp-hero-preview-title" name="hero_preview_title" placeholder="Fluxo em tempo real">
+                </div>
+                <div class="field-item">
+                  <label for="lp-hero-step1-title">Etapa 1: Título</label>
+                  <input type="text" id="lp-hero-step1-title" name="hero_step1_title" placeholder="Lead chega">
+                  <label for="lp-hero-step1-desc" class="sub-label">Etapa 1: Mensagem</label>
+                  <input type="text" id="lp-hero-step1-desc" name="hero_step1_desc" placeholder='"Oi, preciso de um orçamento..."'>
+                </div>
+                <div class="field-item">
+                  <label for="lp-hero-step2-title">Etapa 2: Título</label>
+                  <input type="text" id="lp-hero-step2-title" name="hero_step2_title" placeholder="Chat WhatsApp responde na hora">
+                  <label for="lp-hero-step2-desc" class="sub-label">Etapa 2: Subtítulo</label>
+                  <input type="text" id="lp-hero-step2-desc" name="hero_step2_desc" placeholder="AtendeJá • 24h">
+                </div>
+                <div class="field-item full-col">
+                  <label for="lp-hero-step3-title">Etapa 3: Título</label>
+                  <input type="text" id="lp-hero-step3-title" name="hero_step3_title" placeholder="Orçamento + Follow-up no dia certo">
+                  <label for="lp-hero-step3-desc" class="sub-label">Etapa 3: Badge de Conclusão</label>
+                  <input type="text" id="lp-hero-step3-desc" name="hero_step3_desc" placeholder="Lembrete ativo ✓">
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 03. COMO FUNCIONA / SOLUÇÕES -->
+          <fieldset class="lp-fieldset">
+            <legend class="lp-legend">
+              <span class="step-num">03</span> Seção Como Funciona (Soluções)
+            </legend>
+            <div class="fields-grid">
+              <div class="field-item full-col">
+                <label for="lp-solutions-title">Título Principal da Seção</label>
+                <input type="text" id="lp-solutions-title" name="solutions_title" placeholder="Tudo o que você precisa para não perder nenhuma venda">
+              </div>
+              <div class="field-item">
+                <label for="lp-sol1-title">Card 1: Título</label>
+                <input type="text" id="lp-sol1-title" name="sol1_title" placeholder="01 / Atendimento Imediato 24h">
+                <label for="lp-sol1-copy" class="sub-label">Card 1: Descrição</label>
+                <textarea id="lp-sol1-copy" name="sol1_copy" rows="2"></textarea>
+              </div>
+              <div class="field-item">
+                <label for="lp-sol2-title">Card 2: Título</label>
+                <input type="text" id="lp-sol2-title" name="sol2_title" placeholder="02 / Controle de Orçamentos">
+                <label for="lp-sol2-copy" class="sub-label">Card 2: Descrição</label>
+                <textarea id="lp-sol2-copy" name="sol2_copy" rows="2"></textarea>
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-sol3-title">Card 3: Título</label>
+                <input type="text" id="lp-sol3-title" name="sol3_title" placeholder="03 / Lembrete no Dia Combinado">
+                <label for="lp-sol3-copy" class="sub-label">Card 3: Descrição</label>
+                <textarea id="lp-sol3-copy" name="sol3_copy" rows="2"></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 04. NICHOS ATENDIDOS -->
+          <fieldset class="lp-fieldset">
+            <legend class="lp-legend">
+              <span class="step-num">04</span> Seção Nichos Atendidos
+            </legend>
+            <div class="fields-grid">
+              <div class="field-item full-col">
+                <label for="lp-niches-title">Título da Seção de Nichos</label>
+                <input type="text" id="lp-niches-title" name="niches_title" placeholder="Feito para quem vive de atendimento e orçamento">
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-niches-list">Lista de Nichos em Destaque (separados por vírgula)</label>
+                <textarea id="lp-niches-list" name="niches_list" rows="2" placeholder="Elétrica e Hidráulica, Climatização, Marcenaria, Reformas e Obras, Estética Automotiva, Consultorias e Serviços"></textarea>
+                <small class="muted">Os nichos listados aqui aparecem como chips na Landing Page.</small>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 05. SEÇÃO DE PLANOS NA LP -->
+          <fieldset class="lp-fieldset">
+            <legend class="lp-legend">
+              <span class="step-num">05</span> Seção Planos (Textos na Landing Page)
+            </legend>
+            <div class="fields-grid">
+              <div class="field-item full-col">
+                <label for="lp-plans-title">Título da Seção de Planos</label>
+                <input type="text" id="lp-plans-title" name="plans_title" placeholder="Planos transparentes para o tamanho da sua operação">
+              </div>
+              <div class="field-item">
+                <label for="lp-plan-essencial-desc">Plano Essencial: Descrição</label>
+                <input type="text" id="lp-plan-essencial-desc" name="plan_essencial_desc" placeholder="Para autônomos e quem está começando.">
+                <label for="lp-plan-essencial-btn" class="sub-label">Texto do Botão</label>
+                <input type="text" id="lp-plan-essencial-btn" name="plan_essencial_btn" placeholder="Contratar">
+              </div>
+              <div class="field-item">
+                <label for="lp-plan-pro-badge">Plano Pro: Selo em Destaque</label>
+                <input type="text" id="lp-plan-pro-badge" name="plan_pro_badge" placeholder="Mais escolhido">
+                <label for="lp-plan-pro-desc" class="sub-label">Plano Pro: Descrição</label>
+                <input type="text" id="lp-plan-pro-desc" name="plan_pro_desc" placeholder="Para quem quer atender rápido e fechar mais.">
+                <label for="lp-plan-pro-btn" class="sub-label">Texto do Botão</label>
+                <input type="text" id="lp-plan-pro-btn" name="plan_pro_btn" placeholder="Contratar">
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-plan-empresa-desc">Plano Empresa: Descrição</label>
+                <input type="text" id="lp-plan-empresa-desc" name="plan_empresa_desc" placeholder="Para equipes com maior volume diário.">
+                <label for="lp-plan-empresa-btn" class="sub-label">Texto do Botão</label>
+                <input type="text" id="lp-plan-empresa-btn" name="plan_empresa_btn" placeholder="Contratar">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 06. RODAPÉ (FOOTER) -->
+          <fieldset class="lp-fieldset">
+            <legend class="lp-legend">
+              <span class="step-num">06</span> Rodapé (Footer) & Contato
+            </legend>
+            <div class="fields-grid">
+              <div class="field-item full-col">
+                <label for="lp-footer-copy">Texto de Copyright / Rodapé</label>
+                <input type="text" id="lp-footer-copy" name="footer_copy" placeholder="© 2026 AtendeJá — Atendimento imediato e controle de orçamentos no WhatsApp">
+              </div>
+              <div class="field-item full-col">
+                <label for="lp-footer-whatsapp-url">Link Oficial de Suporte / WhatsApp</label>
+                <input type="url" id="lp-footer-whatsapp-url" name="footer_whatsapp_url" placeholder="https://wa.me/5569993768304">
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="lp-bottom-actions">
+            <button type="submit" id="btn-save-lp-bottom" class="button primary">💾 Salvar Todas as Alterações da Landing Page</button>
+            <a href="/" target="_blank" class="button quiet">Visualizar Página</a>
+          </div>
+        </form>
       </section>
 
       <!-- SEÇÃO 5: IA ASSISTENTE -->

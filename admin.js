@@ -16,7 +16,8 @@
     overview: { eyebrow: "Painel do Fundador", title: "Visão geral da operação" },
     clients: { eyebrow: "Gestão de Clientes", title: "Carteira de contratantes" },
     payments: { eyebrow: "Financeiro & Assinaturas", title: "Histórico de pagamentos" },
-    plans: { eyebrow: "Catálogo de Produtos", title: "Planos cadastrados" },
+    plans: { eyebrow: "Catálogo de Produtos", title: "Planos e Preços" },
+    "edit-lp": { eyebrow: "Personalização do Site", title: "Editar Landing Page" },
     "ai-assistant": { eyebrow: "Inteligência Artificial", title: "IA Assistente do Fundador" },
     "api-connections": { eyebrow: "Integrações & Provedores", title: "Conexões de Provedores de IA" },
     audit: { eyebrow: "Segurança & Conformidade", title: "Auditoria administrativa" }
@@ -352,6 +353,64 @@
     });
   }
 
+  function openPlanEditor(plan) {
+    if (!plan) return;
+    $("edit-plan-code").value = plan.code;
+    $("edit-plan-name").value = plan.name || "";
+    $("edit-plan-price").value = plan.price_brl !== undefined ? plan.price_brl : 0;
+    $("edit-plan-assistants").value = plan.max_assistants !== undefined ? plan.max_assistants : 1;
+    $("edit-plan-apis").value = plan.max_apis !== undefined ? plan.max_apis : 1;
+    $("edit-plan-planning").value = String(Boolean(plan.monthly_planning));
+    $("edit-plan-capabilities").value = Array.isArray(plan.capabilities) ? plan.capabilities.join(", ") : (plan.capabilities || "");
+    $("plan-editor-title").textContent = "Editar Plano: " + plan.name + " (" + plan.code + ")";
+    $("plan-edit-message").textContent = "";
+    $("plan-edit-card").hidden = false;
+    $("plan-edit-card").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function handlePlanEditSubmit(event) {
+    event.preventDefault();
+    var code = $("edit-plan-code").value;
+    var name = $("edit-plan-name").value.trim();
+    var price_brl = parseFloat($("edit-plan-price").value) || 0;
+    var max_assistants = parseInt($("edit-plan-assistants").value, 10) || 0;
+    var max_apis = parseInt($("edit-plan-apis").value, 10) || 0;
+    var monthly_planning = $("edit-plan-planning").value === "true";
+    var capabilitiesRaw = $("edit-plan-capabilities").value.trim();
+    var capabilities = capabilitiesRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+
+    var msgEl = $("plan-edit-message");
+    if (msgEl) {
+      msgEl.textContent = "Salvando alterações no Supabase…";
+      msgEl.className = "message muted";
+    }
+
+    try {
+      var res = await api("admin/plans/" + encodeURIComponent(code), {
+        method: "PATCH",
+        body: {
+          name: name,
+          price_brl: price_brl,
+          max_assistants: max_assistants,
+          max_apis: max_apis,
+          monthly_planning: monthly_planning,
+          capabilities: capabilities
+        }
+      });
+      if (msgEl) {
+        msgEl.textContent = "✓ " + (res.message || "Plano atualizado com sucesso no Supabase!");
+        msgEl.className = "message success";
+      }
+      message("Plano " + name + " atualizado.", false, "app-message");
+      await loadData();
+    } catch (err) {
+      if (msgEl) {
+        msgEl.textContent = "Erro ao salvar plano: " + (err.message || "Tente novamente.");
+        msgEl.className = "message error";
+      }
+    }
+  }
+
   function renderPlans() {
     var body = $("plans-body");
     if (!body) return;
@@ -359,13 +418,78 @@
 
     plans.forEach(function (p) {
       var row = document.createElement("tr");
-      row.appendChild(cell(p.name));
+      row.appendChild(cell(p.code));
+      row.appendChild(cell(p.name, "company-name"));
       row.appendChild(cell(money(p.price_brl)));
       row.appendChild(cell(p.max_assistants));
       row.appendChild(cell(Number(p.max_apis) >= 99 ? "Ilimitadas" : p.max_apis));
       row.appendChild(cell(p.monthly_planning ? "Sim" : "Não"));
+
+      var actTd = document.createElement("td");
+      var editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "button quiet small-btn";
+      editBtn.textContent = "✏️ Editar";
+      editBtn.addEventListener("click", function () {
+        openPlanEditor(p);
+      });
+      actTd.appendChild(editBtn);
+      row.appendChild(actTd);
+
       body.appendChild(row);
     });
+  }
+
+  /* ========================================================================
+     PERSONALIZAÇÃO DA LANDING PAGE (EDITAR - LP)
+     ======================================================================== */
+  async function loadLandingPageConfig() {
+    try {
+      var res = await api("admin/landing-page-config");
+      var d = res.data || {};
+      var form = $("form-edit-lp");
+      if (!form) return;
+
+      Object.keys(d).forEach(function (key) {
+        var el = form.elements[key];
+        if (el) el.value = d[key] || "";
+      });
+    } catch (_e) {}
+  }
+
+  async function handleLpEditSubmit(event) {
+    if (event) event.preventDefault();
+    var form = $("form-edit-lp");
+    if (!form) return;
+
+    var msgEl = $("lp-edit-message");
+    if (msgEl) {
+      msgEl.textContent = "Salvando alterações da Landing Page…";
+      msgEl.className = "message muted";
+    }
+
+    var data = {};
+    var formData = new FormData(form);
+    formData.forEach(function (val, key) {
+      data[key] = String(val).trim();
+    });
+
+    try {
+      var res = await api("admin/landing-page-config", {
+        method: "POST",
+        body: data
+      });
+      if (msgEl) {
+        msgEl.textContent = "✓ " + (res.message || "Landing Page atualizada com sucesso e já ativa!");
+        msgEl.className = "message success";
+      }
+      message("Landing Page atualizada com sucesso.", false, "app-message");
+    } catch (err) {
+      if (msgEl) {
+        msgEl.textContent = "Erro ao salvar LP: " + (err.message || "Tente novamente.");
+        msgEl.className = "message error";
+      }
+    }
   }
 
   function renderAudit() {
@@ -788,6 +912,7 @@
     renderPlans();
     renderAudit();
     await loadApiConnections();
+    await loadLandingPageConfig();
 
     message("Dados atualizados.", false, "app-message");
   }
@@ -953,6 +1078,27 @@
         }
       });
     });
+
+    // Editor de Planos
+    var planForm = $("plan-edit-form");
+    if (planForm) planForm.addEventListener("submit", handlePlanEditSubmit);
+    if ($("btn-close-plan-editor")) {
+      $("btn-close-plan-editor").addEventListener("click", function () {
+        $("plan-edit-card").hidden = true;
+      });
+    }
+    if ($("btn-cancel-plan-edit")) {
+      $("btn-cancel-plan-edit").addEventListener("click", function () {
+        $("plan-edit-card").hidden = true;
+      });
+    }
+
+    // Editor de Landing Page (Editar - LP)
+    var lpForm = $("form-edit-lp");
+    if (lpForm) lpForm.addEventListener("submit", handleLpEditSubmit);
+    if ($("btn-save-lp-top")) {
+      $("btn-save-lp-top").addEventListener("click", handleLpEditSubmit);
+    }
 
     // Inicializa Supabase
     try {

@@ -511,11 +511,81 @@ async function handleWorkspace(req, res) {
 }
 
 const API_CONNECTIONS_FILE = path.join(__dirname, "data", "admin_api_connections.json");
+const LP_CONFIG_FILE = path.join(__dirname, "data", "landing_page_config.json");
 const SUPPORTED_PROVIDERS = new Set(["openai", "openrouter", "gemini", "opencode", "groq"]);
+
+const DEFAULT_LP_CONFIG = {
+  header_brand: "Atende<span class=\"brand-accent\">Já</span>",
+  nav_link1_text: "Como funciona",
+  nav_link1_url: "#como-funciona",
+  nav_link2_text: "Nichos",
+  nav_link2_url: "#nichos",
+  nav_link3_text: "Planos",
+  nav_link3_url: "#planos",
+  header_btn_text: "Começar agora",
+  header_btn_url: "#planos",
+
+  hero_eyebrow: "ATENDIMENTO IMEDIATO • CONTROLE DE ORÇAMENTOS",
+  hero_title: "Pare de perder clientes por demora no WhatsApp.",
+  hero_subtitle: "Responda leads em segundos, organize seus orçamentos e nunca mais esqueça um retorno combinado.",
+  hero_btn_primary_text: "Escolher meu plano",
+  hero_btn_primary_url: "#planos",
+  hero_btn_secondary_text: "Testar agora",
+  hero_preview_title: "Fluxo em tempo real",
+  hero_step1_title: "Lead chega",
+  hero_step1_desc: "\"Oi, preciso de um orçamento...\"",
+  hero_step2_title: "Chat WhatsApp responde na hora",
+  hero_step2_desc: "AtendeJá • 24h",
+  hero_step3_title: "Orçamento + Follow-up no dia certo",
+  hero_step3_desc: "Lembrete ativo ✓",
+
+  solutions_title: "Tudo o que você precisa para não perder nenhuma venda",
+  sol1_title: "01 / Atendimento Imediato 24h",
+  sol1_copy: "Seu cliente chama, recebe resposta na hora e já informa o que precisa — mesmo fora do horário.",
+  sol2_title: "02 / Controle de Orçamentos",
+  sol2_copy: "Visualize cada orçamento enviado, pendente ou aprovado em um só lugar, sem planilhas soltas.",
+  sol3_title: "03 / Lembrete no Dia Combinado",
+  sol3_copy: "Retorne para o cliente exatamente na data prometida e aumente sua taxa de fechamento.",
+
+  niches_title: "Feito para quem vive de atendimento e orçamento",
+  niches_list: "Elétrica e Hidráulica, Climatização, Marcenaria, Reformas e Obras, Estética Automotiva, Consultorias e Serviços",
+
+  plans_title: "Planos transparentes para o tamanho da sua operação",
+  plans_subtitle: "Sem fidelidade, teste grátis e ativação imediata no WhatsApp.",
+  plan_essencial_desc: "Para autônomos e quem está começando.",
+  plan_essencial_btn: "Contratar",
+  plan_pro_badge: "Mais escolhido",
+  plan_pro_desc: "Para quem quer atender rápido e fechar mais.",
+  plan_pro_btn: "Contratar",
+  plan_empresa_desc: "Para equipes com maior volume diário.",
+  plan_empresa_btn: "Contratar",
+
+  footer_copy: "© 2026 AtendeJá — Atendimento imediato e controle de orçamentos no WhatsApp",
+  footer_whatsapp_url: "https://wa.me/5569993768304"
+};
 
 function ensureDataDir() {
   const dir = path.dirname(API_CONNECTIONS_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+}
+
+function readLandingPageConfig() {
+  ensureDataDir();
+  try {
+    if (!fs.existsSync(LP_CONFIG_FILE)) return { ...DEFAULT_LP_CONFIG };
+    const raw = fs.readFileSync(LP_CONFIG_FILE, "utf-8");
+    return { ...DEFAULT_LP_CONFIG, ...JSON.parse(raw) };
+  } catch (_e) {
+    return { ...DEFAULT_LP_CONFIG };
+  }
+}
+
+function writeLandingPageConfig(data) {
+  ensureDataDir();
+  const current = readLandingPageConfig();
+  const merged = { ...current, ...(data || {}), updated_at: new Date().toISOString() };
+  fs.writeFileSync(LP_CONFIG_FILE, JSON.stringify(merged, null, 2), { mode: 0o600 });
+  return merged;
 }
 
 function readApiConnections() {
@@ -756,6 +826,63 @@ async function handleAdmin(req, res, url, parts) {
     const rows = await supabaseRest("plans?" + new URLSearchParams({ select: "code,name,price_brl,max_assistants,max_apis,monthly_planning,capabilities", order: "price_brl.asc" }).toString());
     return send(res, 200, { data: rows || [] });
   }
+
+  const planMatch = /^plans\/([a-z0-9_-]+)$/.exec(route);
+  if ((req.method === "PATCH" || req.method === "POST" || req.method === "PUT") && planMatch) {
+    const planCode = planMatch[1];
+    const body = await readBody(req);
+    const updates = {};
+    if (typeof body.name === "string" && body.name.trim()) updates.name = body.name.trim();
+    if (body.price_brl !== undefined && body.price_brl !== null && body.price_brl !== "") updates.price_brl = Number(body.price_brl);
+    if (body.max_assistants !== undefined && body.max_assistants !== null && body.max_assistants !== "") updates.max_assistants = parseInt(body.max_assistants, 10);
+    if (body.max_apis !== undefined && body.max_apis !== null && body.max_apis !== "") updates.max_apis = parseInt(body.max_apis, 10);
+    if (body.monthly_planning !== undefined) updates.monthly_planning = String(body.monthly_planning) === "true" || body.monthly_planning === true;
+    if (body.capabilities !== undefined) {
+      updates.capabilities = Array.isArray(body.capabilities)
+        ? body.capabilities
+        : String(body.capabilities).split(",").map(s => s.trim()).filter(Boolean);
+    }
+
+    await supabaseRest("plans?code=eq." + encodeURIComponent(planCode), {
+      method: "PATCH",
+      body: updates
+    });
+
+    try {
+      await supabaseRest("admin_audit_logs", {
+        method: "POST",
+        body: {
+          client_id: null,
+          actor: user.email || "Gerente",
+          action: "UPDATE_PLAN",
+          details: { code: planCode, updates }
+        }
+      });
+    } catch (_e) {}
+
+    return send(res, 200, { ok: true, message: `Plano ${planCode} atualizado com sucesso.`, data: updates });
+  }
+
+  if (req.method === "GET" && route === "landing-page-config") {
+    return send(res, 200, { ok: true, data: readLandingPageConfig() });
+  }
+
+  if (req.method === "POST" && route === "landing-page-config") {
+    const body = await readBody(req);
+    const saved = writeLandingPageConfig(body);
+    try {
+      await supabaseRest("admin_audit_logs", {
+        method: "POST",
+        body: {
+          client_id: null,
+          actor: user.email || "Gerente",
+          action: "UPDATE_LANDING_PAGE",
+          details: { updated_at: saved.updated_at }
+        }
+      });
+    } catch (_e) {}
+    return send(res, 200, { ok: true, message: "Landing Page atualizada com sucesso!", data: saved });
+  }
   if (req.method === "GET" && route === "payments") {
     const rows = await supabaseRest("subscriptions_payments?" + new URLSearchParams({ select: "id,client_id,plan_code,amount_brl,payment_method,status,paid_at,created_at", order: "created_at.desc", limit: "250" }).toString());
     return send(res, 200, { data: rows || [] });
@@ -993,6 +1120,9 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === "/api/public-config" && req.method === "GET") {
       return send(res, 200, { supabaseUrl: SUPABASE_URL, supabasePublishableKey: SUPABASE_PUBLISHABLE_KEY });
+    }
+    if (url.pathname === "/api/public-landing-config" && req.method === "GET") {
+      return send(res, 200, { ok: true, data: readLandingPageConfig() });
     }
     if (parts[0] === "api" && parts[1] === "admin") return await handleAdmin(req, res, url, parts);
     if (parts[0] === "api" && parts[1] === "client") return await handleClient(req, res, parts);
