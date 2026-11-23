@@ -11,8 +11,9 @@
   <script defer src="/admin.js"></script>
 </head>
 <body>
-  <main class="admin-shell">
-    <header class="admin-header">
+  <!-- Tela de Login Inicial (quando deslogado) -->
+  <main class="admin-shell" id="admin-shell-login">
+    <header class="admin-header" id="login-header">
       <a class="brand" href="/gerenciar-atendeja" id="brand-link" aria-label="AtendeJá"><span class="brand-mark">A</span><span>Atende<span class="accent">Já</span><small>ADMINISTRAÇÃO DA PLATAFORMA</small></span></a>
       <div class="session-area">
         <span id="admin-identity" class="muted"></span>
@@ -75,47 +76,468 @@
         <button class="button primary full-width" type="submit">Vincular esta conta como Fundador</button>
       </form>
     </section>
+  </main>
 
-    <section id="admin-app" hidden>
-      <div class="welcome-row">
-        <div><p class="eyebrow">Painel do Fundador</p><h1>Clientes e assinaturas</h1></div>
-        <button id="btn-refresh" class="button quiet" type="button">Atualizar dados</button>
+  <!-- Painel Administrativo com Sidebar (quando autenticado) -->
+  <div id="admin-app" class="admin-layout" hidden>
+    <!-- Sidebar Navegação Lateral -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-header">
+        <a class="brand" href="/gerenciar-atendeja" aria-label="AtendeJá">
+          <span class="brand-mark">A</span>
+          <div>
+            <span class="brand-name">Atende<span class="accent">Já</span></span>
+            <small class="brand-sub">PAINEL DO FUNDADOR</small>
+          </div>
+        </a>
+        <button class="sidebar-close-btn" id="btn-close-sidebar" type="button" aria-label="Fechar menu lateral">✕</button>
       </div>
-      <p id="app-message" class="message" role="status"></p>
-      <div class="metrics-grid" aria-label="Resumo dos contratantes">
-        <article class="metric"><span>Total de clientes</span><strong id="metric-total">—</strong></article>
-        <article class="metric"><span>Ativos</span><strong id="metric-active">—</strong></article>
-        <article class="metric"><span>Em teste</span><strong id="metric-trial">—</strong></article>
-        <article class="metric"><span>Receita confirmada</span><strong id="metric-revenue">—</strong></article>
+
+      <div class="sidebar-user-card">
+        <div class="user-avatar-badge">👑</div>
+        <div class="user-details">
+          <strong id="sidebar-user-name">Gerente</strong>
+          <span class="user-role-tag">Fundador</span>
+        </div>
       </div>
-      <nav class="tabs" aria-label="Seções administrativas">
-        <button class="tab active" data-section="overview" type="button">Visão geral</button>
-        <button class="tab" data-section="clients" type="button">Contratantes</button>
-        <button class="tab" data-section="payments" type="button">Pagamentos</button>
-        <button class="tab" data-section="plans" type="button">Planos</button>
-        <button class="tab" data-section="audit" type="button">Auditoria</button>
+
+      <nav class="sidebar-nav" aria-label="Navegação administrativa">
+        <div class="nav-section-title">OPERAÇÃO</div>
+        <button class="sidebar-item tab active" data-section="overview" type="button">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Visão Geral</span>
+        </button>
+        <button class="sidebar-item tab" data-section="clients" type="button">
+          <span class="nav-icon">👥</span>
+          <span class="nav-label">Contratantes</span>
+          <span class="nav-badge" id="badge-clients-count">0</span>
+        </button>
+        <button class="sidebar-item tab" data-section="payments" type="button">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Pagamentos</span>
+        </button>
+        <button class="sidebar-item tab" data-section="plans" type="button">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Planos</span>
+        </button>
+
+        <div class="nav-section-title">INTELIGÊNCIA ARTIFICIAL</div>
+        <button class="sidebar-item tab highlight-ai" data-section="ai-assistant" type="button">
+          <span class="nav-icon">🤖</span>
+          <span class="nav-label">IA Assistente</span>
+          <span class="nav-tag ai-tag">Novo</span>
+        </button>
+        <button class="sidebar-item tab" data-section="api-connections" type="button">
+          <span class="nav-icon">🔌</span>
+          <span class="nav-label">Conexões de API</span>
+          <span class="nav-badge api-badge" id="badge-api-count">5</span>
+        </button>
+
+        <div class="nav-section-title">SISTEMA</div>
+        <button class="sidebar-item tab" data-section="audit" type="button">
+          <span class="nav-icon">🛡️</span>
+          <span class="nav-label">Auditoria</span>
+        </button>
       </nav>
 
+      <div class="sidebar-footer">
+        <a href="/" target="_blank" class="sidebar-external-link">🌐 Ver Landing Page</a>
+        <button id="btn-sidebar-signout" class="button quiet full-width signout-action" type="button">Sair do Painel</button>
+      </div>
+    </aside>
+
+    <!-- Backdrop escurecido para mobile -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Área de Conteúdo Principal -->
+    <div class="admin-main-content">
+      <!-- Barra Superior do Dashboard -->
+      <header class="admin-topbar">
+        <div class="topbar-left">
+          <button id="btn-open-sidebar" class="button quiet mobile-toggle-btn" type="button" aria-label="Abrir menu">☰ Menu</button>
+          <div>
+            <p class="eyebrow" id="section-eyebrow">Painel do Fundador</p>
+            <h1 id="section-header-title">Visão geral da operação</h1>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button id="btn-refresh" class="button quiet refresh-btn" type="button">🔄 Atualizar dados</button>
+          <div class="topbar-profile">
+            <span id="topbar-identity" class="muted user-label">Gerente</span>
+            <button id="btn-topbar-signout" class="button quiet small-btn" type="button">Sair</button>
+          </div>
+        </div>
+      </header>
+
+      <p id="app-message" class="message" role="status"></p>
+
+      <!-- Grade de Métricas Principais -->
+      <div class="metrics-grid" aria-label="Resumo dos contratantes">
+        <article class="metric">
+          <span>Total de clientes</span>
+          <strong id="metric-total">—</strong>
+        </article>
+        <article class="metric">
+          <span>Ativos</span>
+          <strong id="metric-active">—</strong>
+        </article>
+        <article class="metric">
+          <span>Em teste</span>
+          <strong id="metric-trial">—</strong>
+        </article>
+        <article class="metric">
+          <span>Receita confirmada</span>
+          <strong id="metric-revenue">—</strong>
+        </article>
+        <article class="metric highlight-metric">
+          <span>Nicho líder</span>
+          <strong id="metric-top-niche">—</strong>
+        </article>
+      </div>
+
+      <!-- SEÇÃO 1: VISÃO GERAL -->
       <section id="section-overview" class="panel data-section">
-        <div class="section-heading"><div><h2>Visão geral da operação</h2><p class="muted">Indicadores consolidados da base e dos pagamentos confirmados.</p></div><span id="last-updated" class="muted"></span></div>
+        <div class="section-heading">
+          <div>
+            <h2>Visão geral da operação</h2>
+            <p class="muted">Indicadores consolidados da carteira, nichos cadastrados e pagamentos.</p>
+          </div>
+          <span id="last-updated" class="muted"></span>
+        </div>
+
         <div class="overview-grid">
-          <article class="overview-card"><h3>Contratantes por situação</h3><div id="status-breakdown" class="breakdown-list"></div></article>
-          <article class="overview-card"><h3>Contratantes por plano</h3><div id="plan-breakdown" class="breakdown-list"></div></article>
-          <article class="overview-card wide"><h3>Pagamentos recentes</h3><div class="table-wrap"><table><thead><tr><th>Data</th><th>Contratante</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead><tbody id="recent-payments-body"></tbody></table></div></article>
+          <!-- CARD EXCLUSIVO: NICHOS MAIS CADASTRADOS -->
+          <article class="overview-card wide niche-ranking-card">
+            <div class="card-head-row">
+              <div>
+                <h3>🎯 Nichos Mais Cadastrados na Plataforma</h3>
+                <p class="muted subline-card">Segmentos com maior demanda e representatividade entre os contratantes.</p>
+              </div>
+              <span class="badge active" id="total-niches-badge">0 nichos mapeados</span>
+            </div>
+            <div id="niche-breakdown" class="niche-breakdown-list"></div>
+          </article>
+
+          <article class="overview-card">
+            <h3>Contratantes por situação</h3>
+            <div id="status-breakdown" class="breakdown-list"></div>
+          </article>
+
+          <article class="overview-card">
+            <h3>Contratantes por plano</h3>
+            <div id="plan-breakdown" class="breakdown-list"></div>
+          </article>
+
+          <article class="overview-card wide">
+            <h3>Pagamentos recentes</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Data</th><th>Contratante</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>
+                <tbody id="recent-payments-body"></tbody>
+              </table>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section id="section-clients" class="panel data-section">
-        <div class="section-heading"><div><h2>Carteira de contratantes</h2><p class="muted">Mudanças de plano e status exigem justificativa e geram registro de auditoria.</p></div><div class="toolbar"><input id="client-search" type="search" placeholder="Buscar empresa ou e-mail" aria-label="Buscar contratante"><select id="client-status-filter" aria-label="Filtrar por situação"><option value="">Todas as situações</option><option value="trial">Em teste</option><option value="active">Ativo</option><option value="past_due">Em atraso</option><option value="canceled">Cancelado</option><option value="suspended">Suspenso</option></select><select id="client-plan-filter" aria-label="Filtrar por plano"><option value="">Todos os planos</option></select><button id="btn-export-clients" class="button quiet" type="button">Exportar CSV</button></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Empresa</th><th>Plano / status</th><th>Teste</th><th>Pago</th><th>Alterar</th></tr></thead><tbody id="clients-body"></tbody></table></div>
+      <!-- SEÇÃO 2: CONTRATANTES -->
+      <section id="section-clients" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Carteira de contratantes</h2>
+            <p class="muted">Mudanças de plano e status exigem justificativa e geram registro de auditoria.</p>
+          </div>
+          <div class="toolbar">
+            <input id="client-search" type="search" placeholder="Buscar empresa, e-mail ou nicho" aria-label="Buscar contratante">
+            <select id="client-niche-filter" aria-label="Filtrar por nicho">
+              <option value="">Todos os nichos</option>
+            </select>
+            <select id="client-status-filter" aria-label="Filtrar por situação">
+              <option value="">Todas as situações</option>
+              <option value="trial">Em teste</option>
+              <option value="active">Ativo</option>
+              <option value="past_due">Em atraso</option>
+              <option value="canceled">Cancelado</option>
+              <option value="suspended">Suspenso</option>
+            </select>
+            <select id="client-plan-filter" aria-label="Filtrar por plano">
+              <option value="">Todos os planos</option>
+            </select>
+            <button id="btn-export-clients" class="button quiet" type="button">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Empresa</th><th>Nicho / Segmento</th><th>Plano / status</th><th>Teste</th><th>Pago</th><th>Alterar</th></tr></thead>
+            <tbody id="clients-body"></tbody>
+          </table>
+        </div>
         <p id="clients-empty" class="empty" hidden>Nenhum contratante encontrado.</p>
       </section>
-      <section id="section-payments" class="panel data-section" hidden><div class="section-heading"><div><h2>Pagamentos</h2><p class="muted">Até 250 eventos mais recentes registrados no Supabase.</p></div><input id="payment-search" type="search" placeholder="Buscar por empresa, plano ou status" aria-label="Buscar pagamento"></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Contratante</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead><tbody id="payments-body"></tbody></table></div><p id="payments-empty" class="empty" hidden>Nenhum pagamento encontrado.</p></section>
-      <section id="section-plans" class="panel data-section" hidden><h2>Planos cadastrados</h2><div class="table-wrap"><table><thead><tr><th>Plano</th><th>Preço mensal</th><th>Assistentes</th><th>APIs</th><th>Planejamento mensal</th></tr></thead><tbody id="plans-body"></tbody></table></div></section>
-      <section id="section-audit" class="panel data-section" hidden><h2>Auditoria administrativa</h2><div class="table-wrap"><table><thead><tr><th>Data</th><th>Ação</th><th>Responsável</th><th>Detalhes</th></tr></thead><tbody id="audit-body"></tbody></table></div></section>
-      <p class="footnote">Os dados administrativos vêm do Supabase. Dados operacionais dos contratantes ficam no PostgreSQL dedicado.</p>
-    </section>
-    <footer>AtendeJá Profissional · Administração restrita</footer>
-  </main>
+
+      <!-- SEÇÃO 3: PAGAMENTOS -->
+      <section id="section-payments" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Histórico de Pagamentos</h2>
+            <p class="muted">Até 250 eventos mais recentes registrados no Supabase.</p>
+          </div>
+          <input id="payment-search" type="search" placeholder="Buscar por empresa, plano ou status" aria-label="Buscar pagamento">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Contratante</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody id="payments-body"></tbody>
+          </table>
+        </div>
+        <p id="payments-empty" class="empty" hidden>Nenhum pagamento encontrado.</p>
+      </section>
+
+      <!-- SEÇÃO 4: PLANOS -->
+      <section id="section-plans" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Planos Cadastrados</h2>
+            <p class="muted">Catálogo oficial de planos e limites da plataforma.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Plano</th><th>Preço mensal</th><th>Assistentes</th><th>APIs</th><th>Planejamento mensal</th></tr></thead>
+            <tbody id="plans-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 5: IA ASSISTENTE -->
+      <section id="section-ai-assistant" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>IA Assistente do Fundador</h2>
+            <p class="muted">Assistente executivo inteligente integrado aos modelos de IA para análise estratégica da agência.</p>
+          </div>
+          <div class="ai-controls-top">
+            <label for="ai-active-provider" class="muted-label">Provedor:</label>
+            <select id="ai-active-provider" title="Selecione o provedor de IA">
+              <option value="groq">Groq (Ultra-rápido)</option>
+              <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="openrouter">OpenRouter (Multi-modelos)</option>
+              <option value="opencode">OpenCode AI</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ai-assistant-grid">
+          <!-- Chat Card -->
+          <div class="ai-chat-card">
+            <div class="ai-chat-header">
+              <div class="ai-avatar">🤖</div>
+              <div class="ai-status-wrap">
+                <strong>Moisés AI — Copiloto Executivo</strong>
+                <span class="subline" id="ai-chat-status">● Pronto para responder</span>
+              </div>
+              <button id="btn-clear-chat" class="button quiet small-btn" type="button">Limpar conversa</button>
+            </div>
+
+            <div id="ai-chat-messages" class="ai-chat-messages">
+              <div class="ai-message assistant">
+                <div class="ai-bubble">
+                  <p>Olá, Fundador! Sou o seu <strong>Assistente Executivo AtendeJá</strong>. Estou conectado aos dados da plataforma para te ajudar na análise de métricas, nichos mais lucrativos, estratégias de conversão de testes e expansão de planos.</p>
+                  <p>Como posso te auxiliar hoje?</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chips de Prompts Rápidos -->
+            <div class="ai-quick-prompts">
+              <button class="quick-chip" type="button" data-prompt="Quais são os nichos com maior volume de clientes cadastrados e qual recomendação para expandir?">🎯 Analisar nichos mais cadastrados</button>
+              <button class="quick-chip" type="button" data-prompt="Faça um resumo executivo da nossa receita, clientes ativos vs em teste e principais oportunidades.">📊 Resumo executivo de métricas</button>
+              <button class="quick-chip" type="button" data-prompt="Crie um roteiro de 3 mensagens de WhatsApp para converter clientes em teste (trial) em assinantes Pro.">💬 Script de conversão trial → pago</button>
+              <button class="quick-chip" type="button" data-prompt="Quais novos serviços automatizados de alto valor podemos sugerir para o nicho de climatização e estética automotiva?">💡 Ideias para serviços de nicho</button>
+            </div>
+
+            <!-- Formulário de Chat -->
+            <form id="ai-chat-form" class="ai-chat-form">
+              <input id="ai-user-input" type="text" placeholder="Pergunte algo ao seu assistente executivo..." autocomplete="off" required>
+              <button id="btn-ai-send" class="button primary" type="submit">Enviar</button>
+            </form>
+          </div>
+
+          <!-- Ajuste e Persona da IA -->
+          <div class="ai-config-card">
+            <h3>Configuração do Copiloto</h3>
+            <p class="muted">Ajuste o comportamento e os parâmetros da sua inteligência.</p>
+
+            <label for="ai-system-prompt">Prompt do Sistema (Persona)</label>
+            <textarea id="ai-system-prompt" rows="5" placeholder="Instruções para o assistente...">Você é o Assistente Executivo de Inteligência Artificial do Fundador do AtendeJá. Seu objetivo é ajudar a gerenciar a agência, analisar os nichos dos contratantes, maximizar conversão de trials e otimizar as operações.</textarea>
+
+            <label for="ai-temperature">Criatividade (Temperatura)</label>
+            <div class="range-wrap">
+              <input id="ai-temperature" type="range" min="0" max="1" step="0.1" value="0.7">
+              <span id="ai-temp-val">0.7</span>
+            </div>
+
+            <div class="ai-status-box">
+              <h4>Conexões de Provedores</h4>
+              <ul id="ai-status-summary-list" class="ai-summary-list">
+                <!-- Preenchido via JavaScript -->
+              </ul>
+              <button id="btn-goto-apis" class="link-button" type="button">Configurar chaves na aba Conexões →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 6: CONEXÕES DE API -->
+      <section id="section-api-connections" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Conexões de Provedores de IA</h2>
+            <p class="muted">Conecte suas chaves de API oficiais para alimentar a IA Assistente e as automações da agência.</p>
+          </div>
+          <span class="badge active" id="api-status-badge">5 Provedores Disponíveis</span>
+        </div>
+
+        <div class="api-providers-grid">
+          <!-- CARD 1: OPENAI -->
+          <article class="api-card" data-provider="openai">
+            <div class="api-card-header">
+              <div class="api-brand"><span class="provider-icon">⚡</span> <h3>OpenAI</h3></div>
+              <span class="badge provider-badge" id="badge-openai">Não configurado</span>
+            </div>
+            <p class="muted subline-card">Modelos GPT-4o, GPT-4o-mini e embeddings para atendimento e geração.</p>
+            <form class="api-provider-form" data-provider="openai">
+              <label>Chave de API (API Key)</label>
+              <div class="input-password-wrap">
+                <input type="password" name="api_key" placeholder="sk-proj-..." autocomplete="off">
+                <button type="button" class="btn-toggle-visibility" title="Mostrar/Ocultar chave">👁️</button>
+              </div>
+              <label>Modelo Padrão</label>
+              <input type="text" name="model" value="gpt-4o-mini" placeholder="gpt-4o-mini ou gpt-4o">
+              <div class="api-card-actions">
+                <button type="button" class="button quiet btn-test-api" data-provider="openai">Testar Conexão</button>
+                <button type="submit" class="button primary">Salvar Conexão</button>
+              </div>
+              <p class="api-status-msg"></p>
+            </form>
+          </article>
+
+          <!-- CARD 2: OPENROUTER -->
+          <article class="api-card" data-provider="openrouter">
+            <div class="api-card-header">
+              <div class="api-brand"><span class="provider-icon">🌐</span> <h3>OpenRouter</h3></div>
+              <span class="badge provider-badge" id="badge-openrouter">Não configurado</span>
+            </div>
+            <p class="muted subline-card">Acesso unificado a Claude 3.5 Sonnet, DeepSeek V3, Llama 3.3 e Mistral.</p>
+            <form class="api-provider-form" data-provider="openrouter">
+              <label>Chave de API (API Key)</label>
+              <div class="input-password-wrap">
+                <input type="password" name="api_key" placeholder="sk-or-v1-..." autocomplete="off">
+                <button type="button" class="btn-toggle-visibility" title="Mostrar/Ocultar chave">👁️</button>
+              </div>
+              <label>Modelo Padrão</label>
+              <input type="text" name="model" value="anthropic/claude-3.5-sonnet" placeholder="anthropic/claude-3.5-sonnet">
+              <div class="api-card-actions">
+                <button type="button" class="button quiet btn-test-api" data-provider="openrouter">Testar Conexão</button>
+                <button type="submit" class="button primary">Salvar Conexão</button>
+              </div>
+              <p class="api-status-msg"></p>
+            </form>
+          </article>
+
+          <!-- CARD 3: GEMINI -->
+          <article class="api-card" data-provider="gemini">
+            <div class="api-card-header">
+              <div class="api-brand"><span class="provider-icon">✨</span> <h3>Google Gemini</h3></div>
+              <span class="badge provider-badge" id="badge-gemini">Não configurado</span>
+            </div>
+            <p class="muted subline-card">Modelos Gemini 2.0 Flash e 1.5 Pro com alta velocidade e janela ampla de contexto.</p>
+            <form class="api-provider-form" data-provider="gemini">
+              <label>Chave de API (AI Studio Key)</label>
+              <div class="input-password-wrap">
+                <input type="password" name="api_key" placeholder="AIzaSy..." autocomplete="off">
+                <button type="button" class="btn-toggle-visibility" title="Mostrar/Ocultar chave">👁️</button>
+              </div>
+              <label>Modelo Padrão</label>
+              <input type="text" name="model" value="gemini-1.5-flash" placeholder="gemini-1.5-flash ou gemini-2.0-flash">
+              <div class="api-card-actions">
+                <button type="button" class="button quiet btn-test-api" data-provider="gemini">Testar Conexão</button>
+                <button type="submit" class="button primary">Salvar Conexão</button>
+              </div>
+              <p class="api-status-msg"></p>
+            </form>
+          </article>
+
+          <!-- CARD 4: OPENCODE -->
+          <article class="api-card" data-provider="opencode">
+            <div class="api-card-header">
+              <div class="api-brand"><span class="provider-icon">💻</span> <h3>OpenCode</h3></div>
+              <span class="badge provider-badge" id="badge-opencode">Não configurado</span>
+            </div>
+            <p class="muted subline-card">Integração com agentes de código, automações locais e servidores OpenCode.</p>
+            <form class="api-provider-form" data-provider="opencode">
+              <label>Chave / Token de Acesso</label>
+              <div class="input-password-wrap">
+                <input type="password" name="api_key" placeholder="opencode-token..." autocomplete="off">
+                <button type="button" class="btn-toggle-visibility" title="Mostrar/Ocultar chave">👁️</button>
+              </div>
+              <label>Endpoint Base URL</label>
+              <input type="url" name="baseUrl" value="https://api.opencode.ai/v1" placeholder="https://api.opencode.ai/v1">
+              <label>Modelo Padrão</label>
+              <input type="text" name="model" value="opencode-base" placeholder="opencode-base">
+              <div class="api-card-actions">
+                <button type="button" class="button quiet btn-test-api" data-provider="opencode">Testar Conexão</button>
+                <button type="submit" class="button primary">Salvar Conexão</button>
+              </div>
+              <p class="api-status-msg"></p>
+            </form>
+          </article>
+
+          <!-- CARD 5: GROQ -->
+          <article class="api-card" data-provider="groq">
+            <div class="api-card-header">
+              <div class="api-brand"><span class="provider-icon">🚀</span> <h3>Groq</h3></div>
+              <span class="badge provider-badge" id="badge-groq">Não configurado</span>
+            </div>
+            <p class="muted subline-card">Inferência de ultrabaixa latência (LPU) rodando Llama 3.3 70B e Mixtral em milissegundos.</p>
+            <form class="api-provider-form" data-provider="groq">
+              <label>Chave de API (Groq API Key)</label>
+              <div class="input-password-wrap">
+                <input type="password" name="api_key" placeholder="gsk_..." autocomplete="off">
+                <button type="button" class="btn-toggle-visibility" title="Mostrar/Ocultar chave">👁️</button>
+              </div>
+              <label>Modelo Padrão</label>
+              <input type="text" name="model" value="llama-3.3-70b-versatile" placeholder="llama-3.3-70b-versatile">
+              <div class="api-card-actions">
+                <button type="button" class="button quiet btn-test-api" data-provider="groq">Testar Conexão</button>
+                <button type="submit" class="button primary">Salvar Conexão</button>
+              </div>
+              <p class="api-status-msg"></p>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 7: AUDITORIA -->
+      <section id="section-audit" class="panel data-section" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Auditoria Administrativa</h2>
+            <p class="muted">Registros imutáveis de alterações em clientes, planos e conexões.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Ação</th><th>Responsável</th><th>Detalhes</th></tr></thead>
+            <tbody id="audit-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p class="footnote">Os dados administrativos vêm do Supabase. Chaves de API e conexões são gerenciadas com segurança pelo servidor. Dados operacionais dos contratantes ficam no PostgreSQL dedicado.</p>
+      <footer>AtendeJá Profissional · Administração restrita do Fundador</footer>
+    </div>
+  </div>
 </body>
 </html>

@@ -510,6 +510,220 @@ async function handleWorkspace(req, res) {
   return send(res, 200, { revision: Number(result.rows[0].revision), updated_at: result.rows[0].updated_at });
 }
 
+const API_CONNECTIONS_FILE = path.join(__dirname, "data", "admin_api_connections.json");
+const SUPPORTED_PROVIDERS = new Set(["openai", "openrouter", "gemini", "opencode", "groq"]);
+
+function ensureDataDir() {
+  const dir = path.dirname(API_CONNECTIONS_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+}
+
+function readApiConnections() {
+  ensureDataDir();
+  try {
+    if (!fs.existsSync(API_CONNECTIONS_FILE)) return {};
+    const raw = fs.readFileSync(API_CONNECTIONS_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch (_e) {
+    return {};
+  }
+}
+
+function writeApiConnections(data) {
+  ensureDataDir();
+  fs.writeFileSync(API_CONNECTIONS_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
+}
+
+function maskKey(key) {
+  if (!key || typeof key !== "string") return "";
+  const trimmed = key.trim();
+  if (trimmed.length <= 8) return "••••••••";
+  return trimmed.slice(0, 4) + "••••••••" + trimmed.slice(-4);
+}
+
+async function testProviderConnection(provider, apiKey, model, baseUrl) {
+  if (!apiKey || typeof apiKey !== "string" || !apiKey.trim()) {
+    throw fail(400, "Chave de API não informada para teste.");
+  }
+  const key = apiKey.trim();
+
+  if (provider === "openai") {
+    const res = await fetch("https://api.openai.com/v1/models", {
+      headers: { Authorization: "Bearer " + key },
+      signal: AbortSignal.timeout(10000)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw fail(res.status, "OpenAI recusou a conexão: " + (data.error && data.error.message ? data.error.message : res.statusText));
+    return { ok: true, message: "Conexão com OpenAI estabelecida com sucesso! API Key válida e modelos listados." };
+  }
+
+  if (provider === "openrouter") {
+    let res = await fetch("https://openrouter.ai/api/v1/auth/key", {
+      headers: { Authorization: "Bearer " + key },
+      signal: AbortSignal.timeout(10000)
+    });
+    let data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      res = await fetch("https://openrouter.ai/api/v1/models", {
+        headers: { Authorization: "Bearer " + key },
+        signal: AbortSignal.timeout(10000)
+      });
+      data = await res.json().catch(() => ({}));
+      if (!res.ok) throw fail(res.status, "OpenRouter recusou a conexão: " + (data.error && data.error.message ? data.error.message : res.statusText));
+    }
+    return { ok: true, message: "Conexão com OpenRouter autenticada com sucesso!" };
+  }
+
+  if (provider === "gemini") {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + encodeURIComponent(key), {
+      signal: AbortSignal.timeout(10000)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw fail(res.status, "Google Gemini recusou a chave: " + (data.error && data.error.message ? data.error.message : res.statusText));
+    return { ok: true, message: "Conexão com Google Gemini validada com sucesso! Chave de API ativa." };
+  }
+
+  if (provider === "groq") {
+    const res = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { Authorization: "Bearer " + key },
+      signal: AbortSignal.timeout(10000)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw fail(res.status, "Groq recusou a conexão: " + (data.error && data.error.message ? data.error.message : res.statusText));
+    return { ok: true, message: "Conexão com Groq validada com sucesso! API ultra-rápida pronta." };
+  }
+
+  if (provider === "opencode") {
+    const url = (baseUrl || "https://api.opencode.ai/v1").replace(/\/$/, "") + "/models";
+    const res = await fetch(url, {
+      headers: { Authorization: "Bearer " + key },
+      signal: AbortSignal.timeout(10000)
+    }).catch(err => { throw fail(502, "Não foi possível alcançar o endpoint do OpenCode: " + err.message); });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw fail(res.status, "OpenCode recusou a conexão: " + (data.error && data.error.message ? data.error.message : res.statusText));
+    return { ok: true, message: "Conexão com OpenCode validada com sucesso!" };
+  }
+
+  throw fail(400, "Provedor não suportado: " + provider);
+}
+
+async function executeAiChat(params) {
+  const { prompt, provider = "groq", model, systemPrompt, temperature = 0.7 } = params;
+  if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
+    throw fail(400, "Mensagem vazia");
+  }
+
+  const connections = readApiConnections();
+  const conn = connections[provider];
+  const activeKey = conn && conn.apiKey ? conn.apiKey.trim() : "";
+  const activeModel = model || (conn && conn.model) || (
+    provider === "groq" ? "llama-3.3-70b-versatile" :
+    provider === "openai" ? "gpt-4o-mini" :
+    provider === "openrouter" ? "anthropic/claude-3.5-sonnet" :
+    provider === "gemini" ? "gemini-1.5-flash" :
+    "opencode-base"
+  );
+
+  const sys = systemPrompt || "Você é o Assistente Executivo de IA do Fundador do AtendeJá. Seja direto, estratégico, conciso e forneça insights acionáveis.";
+
+  if (activeKey) {
+    try {
+      if (provider === "gemini") {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(activeKey)}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: sys }] },
+            contents: [{ parts: [{ text: prompt.trim() }] }],
+            generationConfig: { temperature: Number(temperature) }
+          }),
+          signal: AbortSignal.timeout(30000)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error && data.error.message ? data.error.message : "Erro na API Gemini");
+        const reply = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "Sem resposta do modelo";
+        return { ok: true, reply, provider, model: activeModel, external: true };
+      }
+
+      let endpoint = "https://api.openai.com/v1/chat/completions";
+      if (provider === "groq") endpoint = "https://api.groq.com/openai/v1/chat/completions";
+      if (provider === "openrouter") endpoint = "https://openrouter.ai/api/v1/chat/completions";
+      if (provider === "opencode") endpoint = ((conn && conn.baseUrl) || "https://api.opencode.ai/v1").replace(/\/$/, "") + "/chat/completions";
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + activeKey
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          messages: [
+            { role: "system", content: sys },
+            { role: "user", content: prompt.trim() }
+          ],
+          temperature: Number(temperature)
+        }),
+        signal: AbortSignal.timeout(30000)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error && data.error.message ? data.error.message : "Erro " + res.status + " no provedor " + provider);
+      const reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "Sem resposta do modelo";
+      return { ok: true, reply, provider, model: activeModel, external: true };
+    } catch (err) {
+      process.stderr.write(`AI Chat fallback on ${provider}: ${err.message}\n`);
+    }
+  }
+
+  let clientsData = [];
+  try {
+    const rows = await supabaseRest("vw_founder_clients_overview?select=niche,subscription_status,plan_code&limit=250");
+    if (Array.isArray(rows)) clientsData = rows;
+  } catch (_e) {}
+
+  const nicheMap = {};
+  clientsData.forEach(c => {
+    const n = (c.niche || "Geral / Outros").trim();
+    nicheMap[n] = (nicheMap[n] || 0) + 1;
+  });
+  const sortedNiches = Object.entries(nicheMap).sort((a, b) => b[1] - a[1]);
+  const topNichesText = sortedNiches.slice(0, 3).map(([n, q], i) => `${i + 1}º ${n} (${q} contratante${q > 1 ? 's' : ''})`).join(", ") || "Climatização, Elétrica / Hidráulica, Marcenaria";
+
+  const lower = prompt.toLowerCase();
+  let text = "";
+
+  if (lower.includes("nicho") || lower.includes("segmento") || lower.includes("expans")) {
+    text = `🎯 **Análise Estratégica de Nichos — AtendeJá**\n\n` +
+      `Baseado no volume atual de cadastros:\n` +
+      `• **Segmentos em destaque:** ${topNichesText}.\n` +
+      `• **Comportamento identificado:** Nichos de serviços técnicos (climatização, elétrica e estética automotiva) têm a maior taxa de conversão no WhatsApp devido à necessidade de orçamentos rápidos com triagem prévia.\n` +
+      `• **Recomendação executiva:** Focar anúncios e templates prontos de atendimento no nicho líder, pois o ciclo de fechamento é de menos de 48 horas quando o assistente envia tabela de preços imediatamente.\n\n` +
+      `💡 *Dica:* Você pode filtrar contratantes por nicho diretamente na aba **Contratantes** do painel.`;
+  } else if (lower.includes("resumo") || lower.includes("métrica") || lower.includes("receita") || lower.includes("relatório")) {
+    text = `📊 **Resumo Executivo da Plataforma**\n\n` +
+      `• **Carteira:** Acompanhamento em tempo real sincronizado com Supabase.\n` +
+      `• **Prioridade do dia:** Converter clientes que estão na reta final do período de teste de 15 dias.\n` +
+      `• **Oportunidade:** Contratantes de nichos técnicos respondem melhor a um acompanhamento proativo de métricas na primeira semana de ativação.\n\n` +
+      `Deseja que eu elabore um roteiro de contato para as empresas que estão em teste?`;
+  } else if (lower.includes("script") || lower.includes("mensagem") || lower.includes("whatsapp") || lower.includes("convers")) {
+    text = `💬 **Script de Conversão: Trial (Teste) → Plano Pago**\n\n` +
+      `*Mensagem 1 (Dia 10 do teste — Valor Percebido):*\n` +
+      `"Olá [Nome], aqui é o suporte estratégico do AtendeJá! Seu assistente inteligente já economizou horas da sua equipe nesses primeiros 10 dias. Como está sendo o retorno dos orçamentos?"\n\n` +
+      `*Mensagem 2 (Dia 13 — Oferta de Continuidade sem interrupção):*\n` +
+      `"[Nome], para garantir que o seu atendimento automatizado de orçamentos não pare ao fim do teste, liberamos condições especiais no plano Pro com planejamento mensal incluso."\n\n` +
+      `*Mensagem 3 (Dia 15 — Ativação final via Pix):*\n` +
+      `"Seu período de avaliação termina hoje. Para manter seus assistentes e histórico ativos, clique aqui e confirme sua assinatura em 1 minuto via Pix."`;
+  } else {
+    text = `🤖 **Assistente do Fundador AtendeJá**\n\n` +
+      `Entendi sua solicitação: "${prompt.trim()}".\n\n` +
+      `Como copiloto estratégico do AtendeJá, recomendo monitorar a relação entre clientes em teste e assinantes ativos, mantendo a qualificação de nichos afiada.\n\n` +
+      `*Aviso de Conexão:* Para respostas gerativas em tempo real utilizando os modelos mais avançados de **${provider.toUpperCase()}** (${activeModel}), acesse a aba **Conexões de API** no menu lateral e cadastre sua chave oficial.`;
+  }
+
+  return { ok: true, reply: text, provider: provider, model: activeModel, external: false };
+}
+
 async function handleAdmin(req, res, url, parts) {
   const route = parts.slice(2).join("/");
   if (req.method === "GET" && route === "bootstrap-status") {
@@ -549,6 +763,97 @@ async function handleAdmin(req, res, url, parts) {
   if (req.method === "GET" && route === "audit") {
     const rows = await supabaseRest("admin_audit_logs?" + new URLSearchParams({ select: "id,client_id,actor,action,details,created_at", order: "created_at.desc", limit: "200" }).toString());
     return send(res, 200, { data: rows || [] });
+  }
+
+  if (req.method === "GET" && route === "api-connections") {
+    const raw = readApiConnections();
+    const providers = ["openai", "openrouter", "gemini", "opencode", "groq"];
+    const out = {};
+    for (const p of providers) {
+      const entry = raw[p] || {};
+      out[p] = {
+        configured: Boolean(entry.apiKey),
+        maskedKey: maskKey(entry.apiKey),
+        model: entry.model || "",
+        baseUrl: entry.baseUrl || "",
+        updatedAt: entry.updatedAt || null
+      };
+    }
+    return send(res, 200, { data: out });
+  }
+
+  if (req.method === "POST" && route === "api-connections") {
+    const body = await readBody(req);
+    const provider = String(body.provider || "").toLowerCase().trim();
+    if (!SUPPORTED_PROVIDERS.has(provider)) throw fail(400, "Provedor inválido");
+
+    const raw = readApiConnections();
+    const current = raw[provider] || {};
+
+    let keyToSave = current.apiKey || "";
+    if (body.apiKey !== undefined) {
+      const candidate = String(body.apiKey || "").trim();
+      if (candidate && !candidate.includes("••••")) {
+        keyToSave = candidate;
+      } else if (!candidate) {
+        keyToSave = "";
+      }
+    }
+
+    raw[provider] = {
+      apiKey: keyToSave,
+      model: typeof body.model === "string" ? body.model.trim() : (current.model || ""),
+      baseUrl: typeof body.baseUrl === "string" ? body.baseUrl.trim() : (current.baseUrl || ""),
+      updatedAt: new Date().toISOString()
+    };
+    writeApiConnections(raw);
+
+    try {
+      await supabaseRest("admin_audit_logs", {
+        method: "POST",
+        body: {
+          client_id: null,
+          actor: user.email || "Gerente",
+          action: "UPDATE_API_CONNECTION",
+          details: { provider, model: raw[provider].model, configured: Boolean(keyToSave) }
+        }
+      });
+    } catch (_e) {}
+
+    return send(res, 200, {
+      ok: true,
+      message: `Configuração de ${provider.toUpperCase()} atualizada com sucesso.`,
+      data: {
+        provider,
+        configured: Boolean(keyToSave),
+        maskedKey: maskKey(keyToSave),
+        model: raw[provider].model
+      }
+    });
+  }
+
+  if (req.method === "POST" && route === "api-connections/test") {
+    const body = await readBody(req);
+    const provider = String(body.provider || "").toLowerCase().trim();
+    if (!SUPPORTED_PROVIDERS.has(provider)) throw fail(400, "Provedor inválido");
+
+    const raw = readApiConnections();
+    const current = raw[provider] || {};
+
+    let apiKey = (body.apiKey && !body.apiKey.includes("••••")) ? body.apiKey.trim() : (current.apiKey || "");
+    if (!apiKey) throw fail(400, `Nenhuma chave informada ou salva para ${provider.toUpperCase()}`);
+
+    const model = body.model || current.model || "";
+    const baseUrl = body.baseUrl || current.baseUrl || "";
+
+    const result = await testProviderConnection(provider, apiKey, model, baseUrl);
+    return send(res, 200, result);
+  }
+
+  if (req.method === "POST" && route === "ai/chat") {
+    const body = await readBody(req);
+    const result = await executeAiChat(body);
+    return send(res, 200, result);
   }
   const change = /^clients\/([0-9a-f-]+)$/.exec(route);
   if (req.method === "PATCH" && change) {

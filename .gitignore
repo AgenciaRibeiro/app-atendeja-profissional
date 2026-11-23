@@ -7,3 +7,5 @@ Thumbs.db
 node_modules/
 *.key
 *.pem
+data/
+*api_connections.json
