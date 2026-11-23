@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administração — AtendeJá</title>
+  <meta name="theme-color" content="#090B0E">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="/admin.js"></script>
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <a class="brand" href="/gerenciar-atendeja" id="brand-link" aria-label="AtendeJá"><span class="brand-mark">A</span><span>Atende<span class="accent">Já</span><small>ADMINISTRAÇÃO DA PLATAFORMA</small></span></a>
+      <div class="session-area">
+        <span id="admin-identity" class="muted"></span>
+        <button id="btn-signout" class="button quiet" type="button" hidden>Sair</button>
+      </div>
+    </header>
+
+    <section id="login-card" class="panel login-panel">
+      <p class="eyebrow">Área restrita</p>
+      <h1>Controle do AtendeJá</h1>
+      <p class="muted" id="login-subtitle">Acesse com suas credenciais de administrador.</p>
+
+      <!-- Formulário de Login (Usuário/Senha) -->
+      <form id="password-login-form" class="login-form">
+        <label for="login-identifier">Usuário ou E-mail</label>
+        <input id="login-identifier" name="identifier" type="text" placeholder="Gerente ou seu e-mail" autocomplete="username" required>
+
+        <label for="login-password">Senha</label>
+        <input id="login-password" name="password" type="password" placeholder="Sua senha" autocomplete="current-password" required>
+
+        <button id="btn-login-submit" class="button primary full-width" type="submit">Entrar no Painel</button>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <button id="btn-show-recovery" class="link-button" type="button">Recuperar ou alterar senha</button>
+        </div>
+      </form>
+
+      <div class="divider"><span>ou</span></div>
+
+      <button id="btn-google" class="button quiet full-width" type="button">Continuar com Google</button>
+      <p id="login-message" class="message" role="status"></p>
+
+      <!-- Formulário de Recuperação de Senha -->
+      <form id="recovery-form" class="recovery-form" hidden>
+        <h2>Recuperar Senha</h2>
+        <p class="muted">Informe seu usuário (Gerente) ou e-mail cadastrado para receber o link seguro de redefinição.</p>
+        <label for="recovery-identifier">Usuário ou E-mail</label>
+        <input id="recovery-identifier" name="identifier" type="text" placeholder="Gerente ou seu e-mail" required>
+        <button class="button primary full-width" type="submit">Enviar link de recuperação</button>
+        <button id="btn-cancel-recovery" class="button quiet full-width" type="button" style="margin-top:8px;">Voltar ao login</button>
+      </form>
+
+      <!-- Formulário de Definição de Nova Senha -->
+      <form id="new-password-form" class="recovery-form" hidden>
+        <h2>Definir Nova Senha</h2>
+        <p class="muted">Digite a nova senha para sua conta administrativa.</p>
+        <label for="new-password-val">Nova senha</label>
+        <input id="new-password-val" name="new_password" type="password" placeholder="Mínimo 6 caracteres" minlength="6" required>
+        <label for="confirm-password-val">Confirmar nova senha</label>
+        <input id="confirm-password-val" name="confirm_password" type="password" placeholder="Repita a nova senha" minlength="6" required>
+        <button class="button primary full-width" type="submit">Salvar nova senha e acessar</button>
+      </form>
+
+      <!-- Formulário de Bootstrap (Primeiro Fundador) -->
+      <form id="bootstrap-form" class="bootstrap-form" hidden>
+        <h2>Configurar primeiro Fundador</h2>
+        <p class="muted">Use o token de configuração fornecido pelo administrador do servidor. Ele será enviado uma vez e não ficará salvo no navegador.</p>
+        <label for="bootstrap-token">Token de bootstrap</label>
+        <input id="bootstrap-token" name="token" type="password" autocomplete="one-time-code" required>
+        <button class="button primary full-width" type="submit">Vincular esta conta como Fundador</button>
+      </form>
+    </section>
+
+    <section id="admin-app" hidden>
+      <div class="welcome-row">
+        <div><p class="eyebrow">Painel do Fundador</p><h1>Clientes e assinaturas</h1></div>
+        <button id="btn-refresh" class="button quiet" type="button">Atualizar dados</button>
+      </div>
+      <p id="app-message" class="message" role="status"></p>
+      <div class="metrics-grid" aria-label="Resumo dos contratantes">
+        <article class="metric"><span>Total de clientes</span><strong id="metric-total">—</strong></article>
+        <article class="metric"><span>Ativos</span><strong id="metric-active">—</strong></article>
+        <article class="metric"><span>Em teste</span><strong id="metric-trial">—</strong></article>
+        <article class="metric"><span>Receita confirmada</span><strong id="metric-revenue">—</strong></article>
+      </div>
+      <nav class="tabs" aria-label="Seções administrativas">
+        <button class="tab active" data-section="overview" type="button">Visão geral</button>
+        <button class="tab" data-section="clients" type="button">Contratantes</button>
+        <button class="tab" data-section="payments" type="button">Pagamentos</button>
+        <button class="tab" data-section="plans" type="button">Planos</button>
+        <button class="tab" data-section="audit" type="button">Auditoria</button>
+      </nav>
+
+      <section id="section-overview" class="panel data-section">
+        <div class="section-heading"><div><h2>Visão geral da operação</h2><p class="muted">Indicadores consolidados da base e dos pagamentos confirmados.</p></div><span id="last-updated" class="muted"></span></div>
+        <div class="overview-grid">
+          <article class="overview-card"><h3>Contratantes por situação</h3><div id="status-breakdown" class="breakdown-list"></div></article>
+          <article class="overview-card"><h3>Contratantes por plano</h3><div id="plan-breakdown" class="breakdown-list"></div></article>
+          <article class="overview-card wide"><h3>Pagamentos recentes</h3><div class="table-wrap"><table><thead><tr><th>Data</th><th>Contratante</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead><tbody id="recent-payments-body"></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section id="section-clients" class="panel data-section">
+        <div class="section-heading"><div><h2>Carteira de contratantes</h2><p class="muted">Mudanças de plano e status exigem justificativa e geram registro de auditoria.</p></div><div class="toolbar"><input id="client-search" type="search" placeholder="Buscar empresa ou e-mail" aria-label="Buscar contratante"><select id="client-status-filter" aria-label="Filtrar por situação"><option value="">Todas as situações</option><option value="trial">Em teste</option><option value="active">Ativo</option><option value="past_due">Em atraso</option><option value="canceled">Cancelado</option><option value="suspended">Suspenso</option></select><select id="client-plan-filter" aria-label="Filtrar por plano"><option value="">Todos os planos</option></select><button id="btn-export-clients" class="button quiet" type="button">Exportar CSV</button></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Empresa</th><th>Plano / status</th><th>Teste</th><th>Pago</th><th>Alterar</th></tr></thead><tbody id="clients-body"></tbody></table></div>
+        <p id="clients-empty" class="empty" hidden>Nenhum contratante encontrado.</p>
+      </section>
+      <section id="section-payments" class="panel data-section" hidden><div class="section-heading"><div><h2>Pagamentos</h2><p class="muted">Até 250 eventos mais recentes registrados no Supabase.</p></div><input id="payment-search" type="search" placeholder="Buscar por empresa, plano ou status" aria-label="Buscar pagamento"></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Contratante</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead><tbody id="payments-body"></tbody></table></div><p id="payments-empty" class="empty" hidden>Nenhum pagamento encontrado.</p></section>
+      <section id="section-plans" class="panel data-section" hidden><h2>Planos cadastrados</h2><div class="table-wrap"><table><thead><tr><th>Plano</th><th>Preço mensal</th><th>Assistentes</th><th>APIs</th><th>Planejamento mensal</th></tr></thead><tbody id="plans-body"></tbody></table></div></section>
+      <section id="section-audit" class="panel data-section" hidden><h2>Auditoria administrativa</h2><div class="table-wrap"><table><thead><tr><th>Data</th><th>Ação</th><th>Responsável</th><th>Detalhes</th></tr></thead><tbody id="audit-body"></tbody></table></div></section>
+      <p class="footnote">Os dados administrativos vêm do Supabase. Dados operacionais dos contratantes ficam no PostgreSQL dedicado.</p>
+    </section>
+    <footer>AtendeJá Profissional · Administração restrita</footer>
+  </main>
+</body>
+</html>

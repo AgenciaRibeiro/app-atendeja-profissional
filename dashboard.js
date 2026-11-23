@@ -120,7 +120,11 @@
     return fallback;
   }
   function writeJson(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (_e) { return false; }
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+      if (window.ATENDEJA_STATE) window.ATENDEJA_STATE.schedule();
+      return true;
+    } catch (_e) { return false; }
   }
   function isDueOrOverdue(dateStr, status) {
     if (!dateStr || status === "fechado" || status === "perdido") return false;
@@ -338,9 +342,14 @@
   }
 
   function currentPlan() {
+    if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.enabled && tenant.plano) return PLAN_CATALOG[tenant.plano] || PLAN_CATALOG.trial;
     return PLAN_CATALOG[planState.currentPlan] || PLAN_CATALOG.trial;
   }
   function trialDaysLeft() {
+    if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.enabled && tenant.trialEndsAt) {
+      var remaining = Math.ceil((new Date(tenant.trialEndsAt).getTime() - Date.now()) / 86400000);
+      return Math.max(0, Number.isFinite(remaining) ? remaining : 0);
+    }
     var start = new Date(planState.trialStartedAt || Date.now()).getTime();
     var elapsed = Math.floor((Date.now() - start) / 86400000);
     return Math.max(0, (planState.trialDays || 15) - elapsed);
@@ -1506,6 +1515,7 @@
     tenant.redeSocialUrl = $("pf-rede-url").value.trim();
 
     if (writeJson(KEYS.TENANT, tenant)) {
+      if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.enabled) window.ATENDEJA_AUTH.updateProfile(tenant).catch(function (error) { showProfileFeedback(error.message, false); });
       renderBranding();
       showProfileFeedback("✓ Perfil salvo com sucesso!", true);
     } else {
@@ -1556,14 +1566,45 @@
     $("auth-gate").hidden = !loggedOut;
   }
   $("btn-logout").addEventListener("click", function () {
+    if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.enabled) {
+      window.ATENDEJA_AUTH.signOut().catch(function (error) { showToast(error.message); });
+      closeSidebar();
+      return;
+    }
     try { localStorage.setItem(KEYS.SESSION, "false"); } catch (_e) {}
     closeSidebar();
     applySessionState();
   });
   $("btn-google-login").addEventListener("click", function () {
+    if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.enabled) {
+      window.ATENDEJA_AUTH.signIn().catch(function (error) {
+        var note = $("auth-note");
+        if (note) { note.textContent = error.message; note.classList.add("error"); }
+      });
+      return;
+    }
     try { localStorage.setItem(KEYS.SESSION, "true"); } catch (_e) {}
     applySessionState();
   });
+
+  document.addEventListener("atendeja:cloud-profile", function (event) {
+    if (!event.detail) return;
+    tenant = Object.assign({}, tenant, event.detail);
+    renderBranding();
+    fillProfileForm();
+  });
+  document.addEventListener("atendeja:cloud-state-loaded", function () {
+    tenant = loadTenant();
+    leads = loadLeads();
+    historyLog = loadHistory();
+    planning = loadPlanning(tenant);
+    assistants = loadAssistants(tenant);
+    connections = loadConnections();
+    renderBranding();
+    navigate(activeView);
+    updateSidebarCounts();
+  });
+  document.addEventListener("atendeja:cloud-sync-error", function (event) { showToast(String(event.detail || "Sincronização pendente")); });
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {

@@ -1,6 +1,6 @@
 # AtendeJá Profissional
 
-Aplicação web estática e **PWA** (*Progressive Web App*) do **AtendeJá** — atendimento imediato no WhatsApp, checkout via Pix (Mercado Pago / n8n) e painel de gestão do contratante.
+Aplicação web do **AtendeJá** — landing page, checkout Pix (Mercado Pago / n8n), dashboard do contratante e painel administrativo. O frontend continua em HTML/CSS/JS; `server.js` adiciona a API Node.js para conectar os serviços com credenciais somente do servidor.
 
 ## O que está incluído
 
@@ -14,20 +14,23 @@ Aplicação web estática e **PWA** (*Progressive Web App*) do **AtendeJá** —
   - **Meus Assistentes:** controle de 15 dias grátis (1 assistente inicial) com upgrade por plano (`Essencial`, `Pro`, `Empresa`).
   - **Conexões - APIs:** configuração mascarada de WhatsApp (WAHA/API), provedor de IA, webhooks e vínculo com assistentes.
   - **Meu Perfil:** edição completa dos dados da empresa e troca/remoção da logo.
+- **Painel Admin do Fundador** (`admin.html`, `admin.js`): login Google via Supabase, visão de clientes/assinaturas/pagamentos/planos/auditoria e alteração de plano/status com motivo registrado.
+- **API Node.js** (`server.js`): autentica tokens pelo Supabase Auth, registra o perfil básico do contratante com e-mail verificado, restringe operações administrativas, aplica limites de planos no backend e usa a role PostgreSQL `atendeja_app_runtime` com contexto RLS por transação.
 - **Documentação** (`docs/especificacao-atendeja.md`): especificação visual e de UX do projeto.
 
 ## Como rodar localmente
 
-Por ser 100% estático (HTML/CSS/JS), basta servir a pasta com qualquer servidor HTTP local:
+O servidor Node serve as páginas e a API. Ele exige Node.js 20+ e variáveis de ambiente privadas para habilitar integrações:
 
 ```bash
-python3 -m http.server 8766
+npm install
+npm start
 ```
 
-Ou com Node.js:
+Configure `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `DATABASE_URL` no ambiente do servidor. A chave `secret` fica somente no servidor; a `publishable` pode ser exposta ao navegador. Não inclua a chave privada em arquivos do frontend ou no repositório. Para o painel do Fundador, configure também `FOUNDER_BOOTSTRAP_TOKEN` (remova-o após o primeiro vínculo); para acesso web de outra origem, defina `CORS_ORIGIN` com a lista exata de domínios.
 
-```bash
-npx --yes serve -l 8766
-```
+O login Google exige que o provedor e as URLs de retorno sejam configurados no Supabase. A primeira conta Fundador usa o token de bootstrap configurado apenas no servidor.
 
-Acesse `http://localhost:8766/index.html` ou `http://localhost:8766/dashboard.html`.
+Acesse `http://localhost:3000/index.html`, `http://localhost:3000/dashboard.html` ou `http://localhost:3000/admin.html`.
+
+O botão Google do dashboard agora usa a sessão Supabase quando a API estiver configurada; o primeiro login cria/vincula o perfil básico e sincroniza o estado do app para um snapshot versionado no PostgreSQL. A configuração do provedor OAuth e URLs permitidas ainda é necessária. O backend também possui uma rota para eventos de pagamento assinados por HMAC, mas o workflow n8n ainda precisa ser ligado e validado em homologação para atualizar a assinatura automaticamente. Consulte [`db/README.md`](./db/README.md) para ordem de configuração, segurança e migração dos bancos.
