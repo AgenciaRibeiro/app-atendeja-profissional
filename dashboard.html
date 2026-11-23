@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel — AtendeJá</title>
+  <meta name="description" content="Painel do contratante AtendeJá: leads, CRM Kanban, planejamento, assistentes virtuais e conexões.">
+  <meta name="theme-color" content="#090B0E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <div class="app-layout" id="app-layout">
+    <aside class="sidebar" id="sidebar" aria-label="Menu principal">
+      <div class="sidebar-brand">
+        <svg class="js-default-logo" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="8" fill="#11141A" stroke="rgba(16,185,129,0.45)" stroke-width="1.5"/>
+          <path d="M17.5 7.5L10.5 17H15.5L14.5 24.5L21.5 15H16.5L17.5 7.5Z" fill="#25D366"/>
+        </svg>
+        <img class="tenant-logo-img js-tenant-logo" alt="Logo da empresa" hidden>
+        <span class="brand-wordmark js-brand-name">Atende<span class="brand-accent">Já</span></span>
+      </div>
+
+      <div class="nav-label">Menu</div>
+      <ul class="nav-list">
+        <li>
+          <button type="button" class="nav-item is-active" data-nav="painel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            Painel de Leads
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-item" data-nav="crm">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="14" rx="1"/></svg>
+            CRM - Leads
+            <span class="nav-count" id="nav-count-retornos" hidden>0</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-item" data-nav="planejamento">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/></svg>
+            Planejamento
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-item" data-nav="assistentes">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 2v6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></svg>
+            Meus Assistentes
+            <span class="nav-pill-mini" id="nav-plan-badge">Trial 15d</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-item" data-nav="conexoes">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Conexões - APIs
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-item" data-nav="perfil">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+            Meu Perfil
+          </button>
+        </li>
+      </ul>
+
+      <div class="nav-label">App</div>
+      <ul class="nav-list">
+        <li>
+          <button type="button" class="nav-item" id="btn-install-pwa" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Instalar App
+          </button>
+        </li>
+        <li>
+          <button type="button" class="nav-item" id="btn-logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+            Sair
+          </button>
+        </li>
+      </ul>
+
+      <div class="sidebar-spacer"></div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <main class="main-area">
+      <div class="mobile-topbar">
+        <button type="button" class="btn-icon" id="btn-open-sidebar" aria-label="Abrir menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <span class="brand-wordmark js-brand-name" style="font-size:16px;">Atende<span class="brand-accent">Já</span></span>
+        <button type="button" class="btn-icon" data-nav="perfil" aria-label="Meu perfil">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+        </button>
+      </div>
+
+      <!-- ===== 1. PAINEL DE LEADS ===== -->
+      <section class="view" id="view-painel" aria-labelledby="painel-title">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="painel-title">Painel de Leads</h1>
+            <p class="view-sub" id="painel-context">Controle geral de vendas, ticket médio e histórico de leads.</p>
+            <a id="tenant-social-chip" class="social-chip" href="#" target="_blank" rel="noopener" hidden></a>
+          </div>
+          <div class="view-actions">
+            <button type="button" class="btn-primary" data-nav="crm">Abrir CRM - Leads</button>
+          </div>
+        </div>
+
+        <section class="kpi-grid" aria-label="Indicadores gerais">
+          <article class="kpi-card">
+            <div class="kpi-label">Total de Leads</div>
+            <div class="kpi-value" id="p-kpi-total">0</div>
+            <div class="kpi-meta is-muted" id="p-kpi-total-meta">0 novo(s)</div>
+          </article>
+          <article class="kpi-card">
+            <div class="kpi-label">Ticket Médio</div>
+            <div class="kpi-value" id="p-kpi-ticket">R$ 0,00</div>
+            <div class="kpi-meta">Média por venda fechada</div>
+          </article>
+          <article class="kpi-card">
+            <div class="kpi-label">Faturamento Fechado</div>
+            <div class="kpi-value" id="p-kpi-fechado">R$ 0,00</div>
+            <div class="kpi-meta" id="p-kpi-fechado-meta">0 vendas • 0%</div>
+          </article>
+          <article class="kpi-card">
+            <div class="kpi-label">Em Negociação</div>
+            <div class="kpi-value" id="p-kpi-pipe">R$ 0,00</div>
+            <div class="kpi-meta is-gold" id="p-kpi-pipe-meta">0 em aberto</div>
+          </article>
+          <article class="kpi-card">
+            <div class="kpi-label">Retornos Pendentes</div>
+            <div class="kpi-value" id="p-kpi-retornos">0</div>
+            <div class="kpi-meta is-gold">Hoje ou atrasados</div>
+          </article>
+        </section>
+
+        <div class="painel-grid">
+          <article class="panel-card">
+            <div class="panel-head">
+              <h2 class="panel-title">Tipos de Serviços Vendidos</h2>
+              <span class="lead-sub" id="painel-services-mode"></span>
+            </div>
+            <div class="bar-list" id="painel-services-bars"></div>
+          </article>
+
+          <article class="panel-card">
+            <div class="panel-head">
+              <h2 class="panel-title">Funil por Etapa</h2>
+              <span class="lead-sub">Visão do CRM</span>
+            </div>
+            <div class="bar-list" id="painel-funnel-bars"></div>
+          </article>
+        </div>
+
+        <article class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Histórico Geral</h2>
+            <div class="filter-pills">
+              <button type="button" class="filter-pill is-active" data-hfilter="all">Todos</button>
+              <button type="button" class="filter-pill" data-hfilter="win">Fechados</button>
+              <button type="button" class="filter-pill" data-hfilter="ia">Automação IA</button>
+            </div>
+          </div>
+          <ul class="history-list" id="painel-history-list"></ul>
+          <div id="painel-history-empty" class="empty-state" hidden>Nenhuma movimentação registrada ainda.</div>
+        </article>
+      </section>
+
+      <!-- ===== 2. CRM - LEADS ===== -->
+      <section class="view" id="view-crm" aria-labelledby="crm-title" hidden>
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="crm-title">CRM - Leads</h1>
+            <p class="view-sub">Arraste os cards manualmente ou ative a mudança inteligente de etapa conforme a conversa.</p>
+          </div>
+          <div class="view-actions">
+            <button type="button" id="btn-export-csv" class="btn-outline">Exportar CSV</button>
+            <button type="button" id="btn-new-lead" class="btn-primary">+ Novo Lead</button>
+          </div>
+        </div>
+
+        <div class="dash-toolbar">
+          <div class="toolbar-left">
+            <div class="filter-pills">
+              <button type="button" class="filter-pill is-active" data-crm-mode="kanban">Kanban</button>
+              <button type="button" class="filter-pill" data-crm-mode="lista">Lista</button>
+              <button type="button" class="filter-pill" id="btn-crm-today">Retorno Hoje</button>
+            </div>
+            <label class="ia-switch-wrap">
+              <input type="checkbox" id="chk-ia-auto" checked>
+              <span>Movimentação inteligente (IA)</span>
+            </label>
+            <button type="button" class="btn-mini" id="btn-ia-rules">Ver regras IA</button>
+          </div>
+          <div class="search-box">
+            <input type="search" id="crm-search" placeholder="Buscar nome, WhatsApp ou serviço...">
+          </div>
+        </div>
+
+        <div class="kanban-board" id="kanban-board" aria-label="Quadro Kanban de Leads"></div>
+
+        <section class="table-card" id="crm-list-wrap" hidden aria-label="Lista de leads">
+          <div class="table-scroll">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Lead / Empresa</th>
+                  <th>Serviço / Nicho</th>
+                  <th>Orçamento</th>
+                  <th>Retorno</th>
+                  <th>Etapa</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="crm-tbody"></tbody>
+            </table>
+          </div>
+          <div id="crm-empty" class="empty-state" hidden>Nenhum lead encontrado para esse filtro.</div>
+        </section>
+
+        <div class="dash-footer-note">
+          <span>Armazenamento local ativo (os exemplos iniciais marcados como “(Exemplo)” podem ser editados ou removidos).</span>
+          <button type="button" id="btn-reset-demo" class="btn-mini">Restaurar exemplos</button>
+        </div>
+      </section>
+
+      <!-- ===== 3. PLANEJAMENTO ===== -->
+      <section class="view" id="view-planejamento" aria-labelledby="plan-title" hidden>
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="plan-title">Planejamento</h1>
+            <p class="view-sub">Planeje sua semana, serviços ofertados e compare o previsto com o resultado real.</p>
+          </div>
+          <div class="view-actions">
+            <div class="filter-pills">
+              <button type="button" class="filter-pill is-active" data-period="semanal">Semanal</button>
+              <button type="button" class="filter-pill" data-period="mensal">Mensal</button>
+            </div>
+            <button type="button" class="btn-primary" id="btn-close-cycle">Encerrar ciclo e salvar métrica</button>
+          </div>
+        </div>
+
+        <div class="plan-grid">
+          <article class="panel-card">
+            <div class="panel-head">
+              <h2 class="panel-title">Metas e Serviços a Oferecer</h2>
+            </div>
+            <form id="pl-meta-form">
+              <div class="field-grid">
+                <div class="field-group">
+                  <label for="pl-meta-clientes">Meta de clientes (semana)</label>
+                  <input type="number" id="pl-meta-clientes" min="1" step="1">
+                </div>
+                <div class="field-group">
+                  <label for="pl-meta-faturamento">Meta de faturamento (R$)</label>
+                  <input type="number" id="pl-meta-faturamento" min="0" step="10">
+                </div>
+              </div>
+              <div class="field-grid">
+                <div class="field-group">
+                  <label for="pl-capacidade">Atendimentos por dia</label>
+                  <input type="number" id="pl-capacidade" min="1" step="1">
+                </div>
+                <div class="field-group">
+                  <label for="pl-obs">Foco da semana</label>
+                  <input type="text" id="pl-obs" placeholder="Ex.: Priorizar fechamentos pendentes">
+                </div>
+              </div>
+              <div class="modal-foot" style="margin-top:4px;margin-bottom:14px;">
+                <button type="submit" class="btn-outline">Salvar metas</button>
+              </div>
+            </form>
+
+            <p class="form-section-title">Serviços planejados para ofertar</p>
+            <form id="pl-add-srv-form" class="field-grid" style="grid-template-columns:1.5fr 0.8fr 0.6fr auto;align-items:end;gap:8px;">
+              <div class="field-group" style="margin:0;">
+                <label for="pl-srv-nome">Serviço</label>
+                <input type="text" id="pl-srv-nome" placeholder="Ex.: Revisão elétrica">
+              </div>
+              <div class="field-group" style="margin:0;">
+                <label for="pl-srv-preco">Valor R$</label>
+                <input type="number" id="pl-srv-preco" min="0" step="1" placeholder="450">
+              </div>
+              <div class="field-group" style="margin:0;">
+                <label for="pl-srv-qtd">Qtd</label>
+                <input type="number" id="pl-srv-qtd" min="1" value="1">
+              </div>
+              <button type="submit" class="btn-primary" style="padding:9px 12px;">+</button>
+            </form>
+            <div class="services-offer-list" id="pl-services-list"></div>
+            <p class="kpi-meta" id="pl-potencial"></p>
+          </article>
+
+          <article class="panel-card">
+            <div class="panel-head">
+              <h2 class="panel-title">Métricas: Previsto vs. Realizado</h2>
+              <span class="lead-sub">Cruzado com vendas fechadas</span>
+            </div>
+            <div class="bar-list">
+              <div>
+                <div class="bar-row-top">
+                  <span class="bar-name">Clientes Fechados vs. Meta</span>
+                  <span class="bar-val" id="pl-metric-clientes">0 / 0</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" id="pl-bar-clientes" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div class="bar-row-top">
+                  <span class="bar-name">Faturamento Real vs. Meta</span>
+                  <span class="bar-val" id="pl-metric-fat">R$ 0,00</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" id="pl-bar-fat" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div class="bar-row-top">
+                  <span class="bar-name">Execução da Agenda Semanal</span>
+                  <span class="bar-val" id="pl-metric-tasks">0%</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill is-gold" id="pl-bar-tasks" style="width:0%"></div></div>
+              </div>
+            </div>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;">
+              <span class="lead-sub">Ticket médio atual no CRM</span>
+              <strong style="font-family:var(--font-display);font-size:18px;color:var(--accent-emerald);" id="pl-metric-ticket">R$ 0,00</strong>
+            </div>
+          </article>
+        </div>
+
+        <h2 class="panel-title" style="margin-bottom:12px;">Agenda da Semana (Segunda a Domingo)</h2>
+        <div class="week-grid" id="week-grid"></div>
+
+        <article class="panel-card">
+          <div class="panel-head"><h2 class="panel-title">Histórico de Ciclos Encerrados</h2></div>
+          <ul class="history-list" id="pl-cycles-list"></ul>
+          <div id="pl-cycles-empty" class="empty-state" hidden>Nenhum ciclo encerrado ainda. Ao final da semana, clique em “Encerrar ciclo e salvar métrica”.</div>
+        </article>
+      </section>
+
+      <!-- ===== 4. MEUS ASSISTENTES ===== -->
+      <section class="view" id="view-assistentes" aria-labelledby="ast-title" hidden>
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="ast-title">Meus Assistentes</h1>
+            <p class="view-sub">Comece com 1 assistente simples de teste por 15 dias e faça upgrade para multiplicar e especializar sua equipe.</p>
+          </div>
+          <div class="view-actions">
+            <button type="button" class="btn-upgrade" id="btn-open-upgrade">Upgrade de Contratação</button>
+            <button type="button" class="btn-primary" id="btn-new-assistant">+ Criar Assistente</button>
+          </div>
+        </div>
+
+        <div class="plan-banner">
+          <div style="flex:1;min-width:240px;">
+            <p class="plan-banner-title" id="ast-plan-title">Teste Grátis (15 dias)</p>
+            <p class="plan-banner-sub" id="ast-plan-sub"></p>
+          </div>
+          <div class="quota-bar-wrap">
+            <div class="quota-label">
+              <span>Cota de Assistentes</span>
+              <strong id="ast-quota-text">1 / 1</strong>
+            </div>
+            <div class="bar-track"><div class="bar-fill" id="ast-quota-bar" style="width:100%"></div></div>
+          </div>
+        </div>
+
+        <div class="assistants-grid" id="assistants-grid"></div>
+      </section>
+
+      <!-- ===== 5. CONEXÕES - APIS ===== -->
+      <section class="view" id="view-conexoes" aria-labelledby="conn-title" hidden>
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="conn-title">Conexões - APIs</h1>
+            <p class="view-sub">Configure WhatsApp, provedor de IA e webhooks dos seus assistentes. Chaves são mascaradas localmente e irão para cofre criptografado ao conectar o Supabase.</p>
+          </div>
+        </div>
+
+        <div class="connections-grid">
+          <form class="panel-card" id="cn-wa-form">
+            <div class="panel-head">
+              <h2 class="panel-title">WhatsApp (WAHA / API)</h2>
+              <span class="conn-status" id="cn-wa-status">Pendente</span>
+            </div>
+            <div class="field-group">
+              <label for="cn-wa-provider">Provedor</label>
+              <select id="cn-wa-provider">
+                <option value="WAHA (Self-Hosted)">WAHA (Self-Hosted)</option>
+                <option value="WhatsApp Cloud API">WhatsApp Cloud API (Meta)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="cn-wa-url">URL da instância</label>
+              <input type="url" id="cn-wa-url" placeholder="https://waha.suaempresa.com">
+            </div>
+            <div class="field-group">
+              <label for="cn-wa-session">Sessão</label>
+              <input type="text" id="cn-wa-session" placeholder="default">
+            </div>
+            <div class="field-group">
+              <label for="cn-wa-key">API Key (nova ou deixar em branco para manter)</label>
+              <input type="password" id="cn-wa-key" autocomplete="off" placeholder="Digite para salvar/atualizar">
+              <p class="conn-mask-note" id="cn-wa-mask"></p>
+            </div>
+            <button type="submit" class="btn-primary btn-full">Salvar WhatsApp</button>
+          </form>
+
+          <form class="panel-card" id="cn-ai-form">
+            <div class="panel-head">
+              <h2 class="panel-title">Inteligência Artificial</h2>
+              <span class="conn-status" id="cn-ai-status">Pendente</span>
+            </div>
+            <div class="field-group">
+              <label for="cn-ai-provider">Provedor</label>
+              <select id="cn-ai-provider">
+                <option value="OpenAI">OpenAI</option>
+                <option value="Google Gemini">Google Gemini</option>
+                <option value="Anthropic Claude">Anthropic Claude</option>
+                <option value="OpenRouter">OpenRouter</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="cn-ai-model">Modelo padrão</label>
+              <input type="text" id="cn-ai-model" placeholder="gpt-4o-mini">
+            </div>
+            <div class="field-group">
+              <label for="cn-ai-key">API Key (mascarada após salvar)</label>
+              <input type="password" id="cn-ai-key" autocomplete="off" placeholder="sk-...">
+              <p class="conn-mask-note" id="cn-ai-mask"></p>
+            </div>
+            <button type="submit" class="btn-primary btn-full">Salvar IA</button>
+          </form>
+
+          <form class="panel-card" id="cn-wh-form">
+            <div class="panel-head">
+              <h2 class="panel-title">Webhooks n8n & CRM</h2>
+              <span class="conn-status" id="cn-wh-status">Ativo</span>
+            </div>
+            <div class="field-group">
+              <label for="cn-wh-checkout">Webhook Checkout Pix (n8n)</label>
+              <input type="url" id="cn-wh-checkout" placeholder="https://...">
+            </div>
+            <div class="field-group">
+              <label for="cn-wh-inbound">Webhook Entrada de Leads / Mensagens CRM</label>
+              <input type="url" id="cn-wh-inbound" placeholder="https://n8n.../webhook/atendeja/leads">
+            </div>
+            <button type="submit" class="btn-primary btn-full">Salvar Webhooks</button>
+          </form>
+        </div>
+
+        <article class="table-card">
+          <div class="panel-head" style="padding:18px 18px 0;">
+            <h2 class="panel-title">Vínculo Assistentes ↔ APIs</h2>
+          </div>
+          <div class="table-scroll">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Assistente</th>
+                  <th>Especialidade</th>
+                  <th>Canal WhatsApp</th>
+                  <th>Motor de IA</th>
+                </tr>
+              </thead>
+              <tbody id="conn-bindings-tbody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===== 6. MEU PERFIL ===== -->
+      <section class="view" id="view-perfil" aria-labelledby="perfil-title" hidden>
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="perfil-title">Meu Perfil</h1>
+            <p class="view-sub">Edite os dados da sua empresa. Eles aparecem no topo da sidebar e no atendimento.</p>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <aside class="panel-card profile-preview">
+            <img id="profile-logo-big" class="profile-logo-big" alt="Logo da empresa" hidden>
+            <div id="profile-logo-fallback" class="profile-logo-fallback">A</div>
+            <p class="profile-preview-name" id="profile-preview-name">Sua empresa</p>
+            <p class="profile-preview-meta" id="profile-preview-meta">—</p>
+            <span class="profile-plan-badge" id="profile-plan-badge">Teste Grátis</span>
+
+            <div class="logo-actions">
+              <label class="btn-mini" for="profile-logo-file" style="cursor:pointer;">Trocar logo</label>
+              <input type="file" id="profile-logo-file" accept="image/*" hidden>
+              <button type="button" class="btn-mini is-del" id="btn-remove-logo">Remover logo</button>
+            </div>
+          </aside>
+
+          <form class="panel-card" id="profile-form" novalidate>
+            <p class="form-section-title">Dados da empresa</p>
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="pf-empresa">Nome da empresa *</label>
+                <input type="text" id="pf-empresa" maxlength="120" required>
+              </div>
+              <div class="field-group">
+                <label for="pf-atendente">Nome do atendente no chat *</label>
+                <input type="text" id="pf-atendente" maxlength="60" required>
+              </div>
+            </div>
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="pf-nicho">Nicho / Segmento</label>
+                <input type="text" id="pf-nicho" maxlength="80">
+              </div>
+              <div class="field-group">
+                <label for="pf-cidade">Cidade / Região</label>
+                <input type="text" id="pf-cidade" maxlength="100">
+              </div>
+            </div>
+
+            <p class="form-section-title">Contato e acesso</p>
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="pf-whatsapp">WhatsApp comercial *</label>
+                <input type="tel" id="pf-whatsapp" maxlength="20" required>
+              </div>
+              <div class="field-group">
+                <label for="pf-email">E-mail Google (login) *</label>
+                <input type="email" id="pf-email" maxlength="120" required>
+              </div>
+            </div>
+
+            <p class="form-section-title">Rede social</p>
+            <div class="field-group">
+              <label for="pf-rede-url">Rede principal da empresa</label>
+              <div class="social-row">
+                <select id="pf-rede-tipo" aria-label="Tipo de rede social">
+                  <option value="Instagram">Instagram</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="TikTok">TikTok</option>
+                  <option value="YouTube">YouTube</option>
+                </select>
+                <input type="text" id="pf-rede-url" maxlength="160" placeholder="@suaempresa ou link">
+              </div>
+            </div>
+
+            <div class="modal-foot">
+              <p class="save-feedback" id="profile-feedback" aria-live="polite"></p>
+              <button type="button" class="btn-outline" id="btn-profile-cancel">Descartar alterações</button>
+              <button type="submit" class="btn-primary">Salvar perfil</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ================= TELA DE ACESSO (deslogado) ================= -->
+  <section id="auth-gate" class="auth-gate" hidden>
+    <div class="auth-card">
+      <div style="display:flex;justify-content:center;">
+        <img id="auth-logo-img" class="tenant-logo-img" alt="Logo" hidden style="width:52px;height:52px;border-radius:12px;">
+        <svg id="auth-default-svg" width="48" height="48" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="8" fill="#11141A" stroke="rgba(16,185,129,0.45)" stroke-width="1.5"/>
+          <path d="M17.5 7.5L10.5 17H15.5L14.5 24.5L21.5 15H16.5L17.5 7.5Z" fill="#25D366"/>
+        </svg>
+      </div>
+      <h1 class="auth-title" id="auth-company-title">Acessar Painel AtendeJá</h1>
+      <p class="auth-sub" id="auth-email-sub">Entre com sua conta Google cadastrada para acessar seus leads.</p>
+      <button type="button" id="btn-google-login" class="btn-google">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 3.2 14.7 2.2 12 2.2 6.6 2.2 2.2 6.6 2.2 12s4.4 9.8 9.8 9.8c5.6 0 9.4-4 9.4-9.5 0-.6-.1-1.1-.2-1.6H12z"/>
+        </svg>
+        Continuar com Google
+      </button>
+      <p class="auth-note">Quando o Supabase estiver conectado, este botão abrirá o login oficial do Google.</p>
+    </div>
+  </section>
+
+  <!-- ================= MODAL LEAD ================= -->
+  <div id="lead-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <h2 id="modal-title">Novo Lead</h2>
+        <button type="button" id="btn-close-modal" class="btn-mini">Fechar</button>
+      </div>
+      <form id="lead-form">
+        <input type="hidden" id="lead-id">
+        <div class="field-grid">
+          <div class="field-group"><label for="lead-nome">Nome do cliente *</label><input type="text" id="lead-nome" required></div>
+          <div class="field-group"><label for="lead-whatsapp">WhatsApp *</label><input type="tel" id="lead-whatsapp" required></div>
+        </div>
+        <div class="field-grid">
+          <div class="field-group"><label for="lead-servico">Serviço solicitado *</label><input type="text" id="lead-servico" required></div>
+          <div class="field-group"><label for="lead-nicho">Nicho</label><input type="text" id="lead-nicho"></div>
+        </div>
+        <div class="field-grid">
+          <div class="field-group"><label for="lead-valor">Valor do orçamento (R$)</label><input type="number" id="lead-valor" min="0" step="0.01"></div>
+          <div class="field-group"><label for="lead-retorno">Data de retorno</label><input type="date" id="lead-retorno"></div>
+        </div>
+        <div class="field-group">
+          <label for="lead-status">Etapa no CRM</label>
+          <select id="lead-status">
+            <option value="novo">Novo Lead</option>
+            <option value="atendimento">Em Atendimento</option>
+            <option value="orcamento">Orçamento Enviado</option>
+            <option value="retorno">Aguardando Retorno</option>
+            <option value="fechado">Fechado</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+        <div class="field-group"><label for="lead-obs">Observações</label><textarea id="lead-obs" rows="2"></textarea></div>
+        <div class="modal-foot">
+          <button type="button" class="btn-mini is-del" id="btn-delete-lead-modal" hidden>Excluir Lead</button>
+          <button type="button" id="btn-cancel-modal" class="btn-outline">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL CONVERSA & IA ================= -->
+  <div id="chat-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="chat-modal-title">
+      <div class="modal-head">
+        <h2 id="chat-modal-title">Conversa & IA</h2>
+        <button type="button" id="btn-close-chat" class="btn-mini">Fechar</button>
+      </div>
+      <p class="lead-sub" id="chat-auto-hint" style="margin:0 0 12px;"></p>
+      <div class="chat-log" id="chat-log"></div>
+      <form id="chat-form">
+        <div class="field-grid" style="grid-template-columns:150px 1fr;">
+          <div class="field-group">
+            <label for="chat-msg-from">Quem falou</label>
+            <select id="chat-msg-from">
+              <option value="lead">Cliente (Lead)</option>
+              <option value="agent">Atendente / IA</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="chat-msg-text">Mensagem (ex.: "fechado, pix enviado" ou "vou pensar")</label>
+            <input type="text" id="chat-msg-text" required placeholder="Digite a mensagem...">
+          </div>
+        </div>
+        <div class="modal-foot" style="margin-top:6px;">
+          <button type="submit" class="btn-primary">Registrar e analisar etapa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL REGRAS IA ================= -->
+  <div id="rules-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+      <div class="modal-head">
+        <h2 id="rules-title">Regras de Movimentação Inteligente</h2>
+        <button type="button" id="btn-close-rules" class="btn-mini">Fechar</button>
+      </div>
+      <p class="lead-sub" style="margin-top:0;">Sempre que uma conversa recebe atualização (no chat local ou via webhook WAHA/n8n), o motor analisa as intenções:</p>
+      <ul style="font-size:13px;line-height:1.7;padding-left:18px;color:var(--text-primary);">
+        <li><strong>Em Atendimento:</strong> saudação inicial, pedido de visita ou disponibilidade (quando em <em>Novo Lead</em>).</li>
+        <li><strong>Orçamento Enviado:</strong> termos como <em>orçamento, valor, preço, proposta, cotação, enviei o valor</em>.</li>
+        <li><strong>Aguardando Retorno:</strong> termos como <em>vou pensar, semana que vem, amanhã, me chama, retorno</em>.</li>
+        <li><strong>Fechado:</strong> confirmação como <em>fechado, fechou, aprovado, pode agendar, paguei, pix enviado, comprovante</em>.</li>
+        <li><strong>Perdido:</strong> recusa como <em>não quero, desisti, muito caro, cancelar, fechei com outro</em>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= MODAL CRIAR / EDITAR ASSISTENTE ================= -->
+  <div id="assistant-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ast-modal-title">
+      <div class="modal-head">
+        <h2 id="ast-modal-title">Novo Assistente</h2>
+        <button type="button" id="btn-close-ast" class="btn-mini">Fechar</button>
+      </div>
+      <form id="assistant-form">
+        <input type="hidden" id="ast-id">
+        <div class="field-grid">
+          <div class="field-group"><label for="ast-nome">Nome do assistente *</label><input type="text" id="ast-nome" required placeholder="Ex.: Assistente de Cotação"></div>
+          <div class="field-group">
+            <label for="ast-espec">Especialidade</label>
+            <select id="ast-espec">
+              <option value="Atendimento">Atendimento</option>
+              <option value="Cotação">Cotação / Orçamentos</option>
+              <option value="Vendas">Vendas & Fechamento</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Agendamento">Agendamento</option>
+              <option value="Pós-Venda">Pós-Venda / Cobrança</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Capacidades (liberadas conforme seu plano)</label>
+          <div class="caps-check-grid" id="ast-caps-grid"></div>
+        </div>
+        <div class="field-group">
+          <label for="ast-prompt">Instrução do assistente</label>
+          <textarea id="ast-prompt" rows="3" placeholder="Como ele deve atender seus clientes..."></textarea>
+        </div>
+        <div class="modal-foot">
+          <button type="button" id="btn-cancel-ast" class="btn-outline">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Assistente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL SIMULAR ASSISTENTE ================= -->
+  <div id="sim-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="sim-title">
+      <div class="modal-head">
+        <h2 id="sim-title">Testar Assistente</h2>
+        <button type="button" id="btn-close-sim" class="btn-mini">Fechar</button>
+      </div>
+      <form id="sim-form">
+        <div class="field-group">
+          <label for="sim-input">Mensagem simulada do cliente</label>
+          <input type="text" id="sim-input" required>
+        </div>
+        <div class="panel-card" style="padding:12px;margin-bottom:12px;font-size:13px;" id="sim-output"></div>
+        <div class="modal-foot" style="margin-top:0;"><button type="submit" class="btn-primary">Simular resposta</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL UPGRADE DE CONTRATAÇÃO ================= -->
+  <div id="upgrade-modal" class="modal-backdrop" hidden>
+    <div class="modal-card is-wide" role="dialog" aria-modal="true" aria-labelledby="upg-title">
+      <div class="modal-head">
+        <h2 id="upg-title">Upgrade de Contratação</h2>
+        <button type="button" id="btn-close-upgrade" class="btn-mini">Fechar</button>
+      </div>
+      <p class="view-sub" id="upgrade-reason" style="margin-top:0;"></p>
+      <p class="lead-sub" id="upgrade-current-label" style="margin-top:6px;"></p>
+
+      <div class="upgrade-plans-grid">
+        <div class="upgrade-plan-box">
+          <h3>Essencial</h3>
+          <div class="upgrade-plan-price">R$ 49/mês</div>
+          <ul>
+            <li>1 Assistente</li>
+            <li>Atendimento + Cotação</li>
+            <li>Planejamento Semanal</li>
+            <li>Até 2 APIs conectadas</li>
+          </ul>
+          <button type="button" class="btn-outline btn-full" data-hire-plan="Essencial">Contratar Essencial</button>
+        </div>
+        <div class="upgrade-plan-box is-featured">
+          <h3>Pro • Mais escolhido</h3>
+          <div class="upgrade-plan-price">R$ 97/mês</div>
+          <ul>
+            <li>Até 3 Assistentes (ex.: Cotação + Vendas)</li>
+            <li>Automação inteligente do CRM</li>
+            <li>Planejamento Semanal + Mensal</li>
+            <li>Até 4 APIs conectadas</li>
+          </ul>
+          <button type="button" class="btn-primary btn-full" data-hire-plan="Pro">Contratar Pro</button>
+        </div>
+        <div class="upgrade-plan-box">
+          <h3>Empresa</h3>
+          <div class="upgrade-plan-price">R$ 197/mês</div>
+          <ul>
+            <li>Até 6 Assistentes completos</li>
+            <li>Todas capacidades (Marketing, Agendamento, Pós-Venda)</li>
+            <li>Planejamento Semanal + Mensal</li>
+            <li>APIs ilimitadas</li>
+          </ul>
+          <button type="button" class="btn-outline btn-full" data-hire-plan="Empresa">Contratar Empresa</button>
+        </div>
+      </div>
+
+      <div class="panel-card" style="padding:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <strong style="font-size:13px;">Testar visualização de plano (preview local)</strong>
+          <div class="lead-sub">Simule imediatamente os limites de cada plano antes de conectar o Supabase.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="upgrade-preview-select" class="status-select">
+            <option value="trial">Teste Grátis (15 dias)</option>
+            <option value="essencial">Essencial (1 assist.)</option>
+            <option value="pro">Pro (3 assist.)</option>
+            <option value="empresa">Empresa (6 assist.)</option>
+          </select>
+          <button type="button" class="btn-mini is-wa" id="btn-apply-preview-plan">Aplicar preview</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-banner" class="toast-banner" hidden aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
