@@ -45,3 +45,18 @@ Sempre que ocorrer falha de deploy no Coolify, erros no Dockerfile, containers m
   - **Não Mascarar Sintomas:** Jamais apenas reiniciar o container ou aumentar timeouts para esconder um serviço que não inicializou corretamente.
   - **Mudança Mínima e Precisa:** Alterar somente a causa raiz confirmada por evidências.
   - **Validação Pós-Correção:** Comprovar a recuperação testando a resposta real do serviço (`curl/wget http://127.0.0.1:PORTA/ENDPOINT`) e a transição para `healthy`.
+
+---
+
+### 4. Integração de WhatsApp e Webhooks: Skill `whatsapp-api-and-webhooks`
+Sempre que a tarefa envolver gateways de WhatsApp (WAHA, Evolution API, Meta WhatsApp Cloud API), geração e exibição de QR Code, gerenciamento de sessões e instâncias, reconexão automática, fluxos no n8n ou webhooks de mensagens e status:
+
+- **Ativação Obrigatória da Skill `whatsapp-api-and-webhooks`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `whatsapp-api-and-webhooks`** (`.agents/skills/whatsapp-api-and-webhooks/SKILL.md`).
+  - Ativação **100% autônoma** sempre que envolver WhatsApp ou mensagens.
+- **Diretrizes Mandatórias de WhatsApp & Mensageria:**
+  - **Gerenciamento Preciso de Estados:** Manter rastreabilidade completa (`CREATED`, `CONNECTING`, `QR_REQUIRED`, `CONNECTED`, `DISCONNECTED`, `RECONNECTING`, `ERROR`, `STOPPED`).
+  - **QR Code Seguro:** Exibir somente quando necessário, controlar expiração, remover após autenticação e NUNCA salvar QR Code permanentemente ou em logs.
+  - **Webhooks Rápidos e Confiáveis:** Responder ao webhook HTTP rapidamente e delegar processamento pesado para filas assíncronas com tratamento de idempotência e prevenção de loops.
+  - **Reconexão com Exponential Backoff:** Reconectar com intervalo progressivo e limites claros, sem contornar autenticações e solicitando intervenção quando um novo QR Code for exigido.
+  - **Integração com n8n:** Preservar IDs de mensagens, respeitar pausas de atendimento para operadores humanos e evitar duplicidade.
