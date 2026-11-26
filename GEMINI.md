@@ -131,6 +131,8 @@ Sempre que a tarefa envolver Docker, Dockerfile, docker-compose, deploys no Cool
   - **Healthchecks Confiáveis:** Não aceitar status de container "up" sem validar a resposta HTTP real da aplicação (`/health` ou `/ready` retornando `200`).
   - **Estratégia de Backup 3-2-1:** Backups automatizados do banco de dados (ex: `pg_dump`), validação periódica de integridade e cópia armazenada fora da VPS primária.
   - **Deploy Seguro e Rollback:** Testar builds antes de promover a produção e manter histórico de imagem/versão estável para reversão imediata em caso de falha.
+  - **Monitoramento Centralizado e Alertas Inteligentes:** Monitoramento contínuo de VPS, containers, PostgreSQL, endpoints de saúde, backups e SSL. Alertas categorizados (Crítico, Atenção, Informativo) via Telegram/WhatsApp, com deduplicação, notificação de recuperação e arquitetura leve (Uptime Kuma, métricas).
+
 
 
 

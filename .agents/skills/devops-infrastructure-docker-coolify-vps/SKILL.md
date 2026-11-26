@@ -469,7 +469,141 @@ Evitar criar múltiplos mecanismos para executar a mesma rotina sem necessidade.
 
 Todas as automações devem gerar registros de execução e permitir identificar falhas.
 
-## 13. OTIMIZAÇÃO DE CUSTOS
+## 13. MONITORAMENTO CENTRALIZADO E ALERTAS INTELIGENTES
+
+Implementar uma estrutura centralizada de monitoramento da VPS e dos serviços hospedados, permitindo identificar falhas, antecipar problemas e notificar os responsáveis automaticamente.
+
+O monitoramento deve contemplar infraestrutura, aplicações, banco de dados, backups, certificados SSL e disponibilidade dos serviços.
+
+### 13.1 Indicadores monitorados
+
+Monitorar continuamente:
+
+- Disponibilidade da VPS.
+- Uso de CPU.
+- Uso de memória RAM e Swap.
+- Espaço disponível em disco.
+- Estado dos containers Docker.
+- Reinicializações inesperadas.
+- Disponibilidade do PostgreSQL.
+- Disponibilidade das aplicações.
+- Respostas dos endpoints de saúde.
+- Execução e integridade dos backups.
+- Validade dos certificados SSL.
+- Falhas de deploy.
+- Erros críticos nos serviços.
+
+### 13.2 Sistema de alertas
+
+Implementar notificações automáticas para os responsáveis pela infraestrutura.
+
+Priorizar integração com Telegram e, quando apropriado, WhatsApp.
+
+Classificar os alertas por gravidade:
+
+**CRÍTICO**
+- VPS indisponível.
+- Banco de dados fora do ar.
+- Aplicação principal indisponível.
+- Falha grave de armazenamento.
+- Backup crítico não executado.
+- Suspeita de comprometimento da infraestrutura.
+
+**ATENÇÃO**
+- Uso elevado de CPU.
+- Memória RAM próxima do limite.
+- Disco próximo da capacidade máxima.
+- Container reiniciando repetidamente.
+- Certificado SSL próximo do vencimento.
+- Falhas recorrentes em serviços secundários.
+
+**INFORMATIVO**
+- Backup concluído.
+- Deploy concluído.
+- Serviço recuperado.
+- Certificado renovado.
+- Rotina de manutenção executada.
+
+### 13.3 Regras de notificação
+
+- Enviar alertas somente quando houver condições relevantes.
+- Evitar notificações repetidas para o mesmo incidente.
+- Implementar deduplicação e controle de frequência.
+- Registrar horário de início e recuperação.
+- Informar o serviço afetado.
+- Informar a gravidade.
+- Apresentar uma descrição objetiva do problema.
+- Informar a ação recomendada.
+- Enviar notificação de recuperação quando o serviço voltar ao normal.
+
+### 13.4 Monitoramento de backups
+
+Criar verificações específicas para identificar:
+
+- Backup não iniciado.
+- Backup interrompido.
+- Backup com erro.
+- Arquivo ausente.
+- Tamanho inesperadamente reduzido.
+- Falha na transferência para armazenamento externo.
+- Falha na verificação de integridade.
+
+Não considerar um backup válido somente porque um arquivo foi gerado.
+
+### 13.5 Monitoramento de certificados SSL
+
+Verificar periodicamente:
+
+- Validade dos certificados.
+- Domínios associados.
+- Prazo restante até o vencimento.
+- Estado da renovação automática.
+
+Configurar alertas preventivos, por exemplo, quando faltarem 30, 14 e 7 dias para o vencimento.
+
+### 13.6 Arquitetura recomendada
+
+Avaliar ferramentas adequadas ao tamanho da infraestrutura.
+
+Possibilidades:
+
+- Uptime Kuma: disponibilidade e monitoramento de endpoints.
+- Prometheus: coleta de métricas.
+- Grafana: visualização de indicadores e dashboards.
+- Alertmanager: gerenciamento de alertas.
+- n8n: automações e distribuição de notificações.
+- Telegram Bot API: envio de alertas.
+
+Não instalar todas as ferramentas automaticamente.
+
+Primeiro avaliar os recursos disponíveis na VPS, o monitoramento já existente e o custo operacional de cada componente.
+
+Priorizar uma arquitetura leve e incremental.
+
+### 13.7 Segurança e confiabilidade
+
+- Não expor dashboards administrativos publicamente sem autenticação.
+- Proteger tokens e credenciais.
+- Restringir acesso às métricas sensíveis.
+- Utilizar conexões criptografadas quando aplicável.
+- Evitar incluir senhas e dados privados nas notificações.
+- Garantir que a falha do sistema de alertas não comprometa as aplicações monitoradas.
+- Registrar incidentes e notificações.
+
+### 13.8 Critérios de homologação
+
+- Os serviços essenciais estão sendo monitorados.
+- Os alertas críticos estão funcionando.
+- As notificações chegam ao canal configurado.
+- Alertas duplicados são controlados.
+- Eventos de recuperação são registrados.
+- Backups possuem monitoramento independente.
+- Certificados SSL possuem alertas preventivos.
+- O sistema de monitoramento não compromete os recursos da VPS.
+
+Não declarar o monitoramento concluído antes de executar testes reais de alerta e recuperação.
+
+## 14. OTIMIZAÇÃO DE CUSTOS
 
 A infraestrutura deve ser dimensionada de acordo com a demanda real.
 
@@ -489,7 +623,7 @@ Não economizar eliminando backups, segurança, monitoramento ou redundância ne
 
 A redução de custos não pode comprometer a integridade dos dados nem a disponibilidade dos serviços.
 
-## 14. TESTES E HOMOLOGAÇÃO
+## 15. TESTES E HOMOLOGAÇÃO
 
 Antes de considerar uma infraestrutura pronta, executar testes adequados.
 
@@ -513,7 +647,7 @@ Antes de considerar uma infraestrutura pronta, executar testes adequados.
 
 Testar cenários de falha sem comprometer os serviços de produção.
 
-## 15. REGRAS DE EXECUÇÃO
+## 16. REGRAS DE EXECUÇÃO
 
 Antes de realizar qualquer alteração:
 
@@ -537,7 +671,7 @@ Durante a execução:
 
 Operações de risco elevado, como exclusão de volumes, remoção de bancos, alterações de firewall, mudanças de DNS e reinicializações de serviços críticos, exigem autorização explícita.
 
-## 16. CRITÉRIOS DE CONCLUSÃO
+## 17. CRITÉRIOS DE CONCLUSÃO
 
 A infraestrutura somente poderá ser considerada homologada quando:
 
@@ -570,7 +704,7 @@ Ao concluir, apresentar relatório contendo:
 11. Melhorias implementadas.
 12. Pendências e recomendações.
 
-## 17. DIRETRIZ FINAL
+## 18. DIRETRIZ FINAL
 
 A infraestrutura deve ser confiável, econômica, segura e fácil de manter.
 
