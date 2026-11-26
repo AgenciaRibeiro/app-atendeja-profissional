@@ -15,7 +15,7 @@ try {
   } else if (fs.existsSync(path.join(__dirname, ".env"))) {
     const rawEnv = fs.readFileSync(path.join(__dirname, ".env"), "utf8");
     for (const line of rawEnv.split("\n")) {
-      const match = /^\s*([\w.-]+)\s*=\s*(.*)?\s*$/.exec(line);
+      const match = /^\s([\w.-]+)\s=\s(.)?\s*$/.exec(line);
       if (match && process.env[match[1]] === undefined) {
         let val = (match[2] || "").trim();
         if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
@@ -371,7 +371,7 @@ async function enforcePlan(client, resource, connection, creating, payload, reco
     }
     if (period === "mensal") throw fail(403, "Planejamento mensal exige plano superior");
   }
-  if (resource === "assistants" if (resource === "assistants" && payload.capacidades !== undefined) {if (resource === "assistants" && payload.capacidades !== undefined) { payload.capacidades !== undefined if (resource === "assistants" && payload.capacidades !== undefined) {if (resource === "assistants" && payload.capacidades !== undefined) { client) {
+  if (resource === "assistants" && payload.capacidades !== undefined) {
     if (!Array.isArray(payload.capacidades) || payload.capacidades.some(cap => !caps.capabilities.includes(cap))) {
       throw fail(403, "Uma ou mais capacidades não estão disponíveis no plano atual");
     }
@@ -380,12 +380,12 @@ async function enforcePlan(client, resource, connection, creating, payload, reco
   if (resource === "assistants") {
     await connection.query("SELECT pg_advisory_xact_lock(74591, hashtext($1))", [client.id]);
     const count = await connection.query("SELECT COUNT(*)::int AS total FROM public.assistants WHERE client_id = $1", [client.id]);
-    if (count.rows[0].total >= caps.max_assistants) throw fail(403, `Limite de ${caps.max_assistants} assistentes do seu plano ${caps.code} atingido.Upgrade para mais.`);
+    if (count.rows[0].total >= caps.max_assistants) throw fail(403, Limite de ${caps.max_assistants} assistentes do seu plano ${caps.code} atingido.Upgrade para mais.);
   }
   if (resource === "api_connections") {
     await connection.query("SELECT pg_advisory_xact_lock(74591, hashtext($1))", [client.id]);
     const count = await connection.query("SELECT COUNT(*)::int AS total FROM public.api_connections WHERE client_id = $1", [client.id]);
-    if (count.rows[0].total >= caps.max_apis) throw fail(403, `Limite de ${caps.max_apis} conexões API do seu plano ${caps.code} atingido.Upgrade para mais.`);
+    if (count.rows[0].total >= caps.max_apis) throw fail(403, Limite de ${caps.max_apis} conexões API do seu plano ${caps.code} atingido.Upgrade para mais.);
   }
 }
 
@@ -701,7 +701,7 @@ async function executeAiChat(params) {
   if (activeKey) {
     try {
       if (provider === "gemini") {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(activeKey)}`;
+        const url = https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(activeKey)};
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -744,7 +744,7 @@ async function executeAiChat(params) {
       const reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "Sem resposta do modelo";
       return { ok: true, reply, provider, model: activeModel, external: true };
     } catch (err) {
-      process.stderr.write(`AI Chat fallback on ${provider}: ${err.message}\n`);
+      process.stderr.write(AI Chat fallback on ${provider}: ${err.message}\n);
     }
   }
 
@@ -760,37 +760,37 @@ async function executeAiChat(params) {
     nicheMap[n] = (nicheMap[n] || 0) + 1;
   });
   const sortedNiches = Object.entries(nicheMap).sort((a, b) => b[1] - a[1]);
-  const topNichesText = sortedNiches.slice(0, 3).map(([n, q], i) => `${i + 1}º ${n} (${q} contratante${q > 1 ? 's' : ''})`).join(", ") || "Climatização, Elétrica / Hidráulica, Marcenaria";
+  const topNichesText = sortedNiches.slice(0, 3).map(([n, q], i) => ${i + 1}º ${n} (${q} contratante${q > 1 ? 's' : ''})).join(", ") || "Climatização, Elétrica / Hidráulica, Marcenaria";
 
   const lower = prompt.toLowerCase();
   let text = "";
 
   if (lower.includes("nicho") || lower.includes("segmento") || lower.includes("expans")) {
-    text = `🎯 **Análise Estratégica de Nichos — AtendeJá**\n\n` +
-      `Baseado no volume atual de cadastros:\n` +
-      `• **Segmentos em destaque:** ${topNichesText}.\n` +
-      `• **Comportamento identificado:** Nichos de serviços técnicos (climatização, elétrica e estética automotiva) têm a maior taxa de conversão no WhatsApp devido à necessidade de orçamentos rápidos com triagem prévia.\n` +
-      `• **Recomendação executiva:** Focar anúncios e templates prontos de atendimento no nicho líder, pois o ciclo de fechamento é de menos de 48 horas quando o assistente envia tabela de preços imediatamente.\n\n` +
-      `💡 *Dica:* Você pode filtrar contratantes por nicho diretamente na aba **Contratantes** do painel.`;
+    text = 🎯 Análise Estratégica de Nichos — AtendeJá\n\n +
+      Baseado no volume atual de cadastros:\n +
+      • Segmentos em destaque: ${topNichesText}.\n +
+      • Comportamento identificado: Nichos de serviços técnicos (climatização, elétrica e estética automotiva) têm a maior taxa de conversão no WhatsApp devido à necessidade de orçamentos rápidos com triagem prévia.\n +
+      • Recomendação executiva: Focar anúncios e templates prontos de atendimento no nicho líder, pois o ciclo de fechamento é de menos de 48 horas quando o assistente envia tabela de preços imediatamente.\n\n +
+      💡 Dica: Você pode filtrar contratantes por nicho diretamente na aba Contratantes do painel.;
   } else if (lower.includes("resumo") || lower.includes("métrica") || lower.includes("receita") || lower.includes("relatório")) {
-    text = `📊 **Resumo Executivo da Plataforma**\n\n` +
-      `• **Carteira:** Acompanhamento em tempo real sincronizado com Supabase.\n` +
-      `• **Prioridade do dia:** Converter clientes que estão na reta final do período de teste de 15 dias.\n` +
-      `• **Oportunidade:** Contratantes de nichos técnicos respondem melhor a um acompanhamento proativo de métricas na primeira semana de ativação.\n\n` +
-      `Deseja que eu elabore um roteiro de contato para as empresas que estão em teste?`;
+    text = 📊 Resumo Executivo da Plataforma\n\n +
+      • Carteira: Acompanhamento em tempo real sincronizado com Supabase.\n +
+      • Prioridade do dia: Converter clientes que estão na reta final do período de teste de 15 dias.\n +
+      • Oportunidade: Contratantes de nichos técnicos respondem melhor a um acompanhamento proativo de métricas na primeira semana de ativação.\n\n +
+      Deseja que eu elabore um roteiro de contato para as empresas que estão em teste?;
   } else if (lower.includes("script") || lower.includes("mensagem") || lower.includes("whatsapp") || lower.includes("convers")) {
-    text = `💬 **Script de Conversão: Trial (Teste) → Plano Pago**\n\n` +
-      `*Mensagem 1 (Dia 10 do teste — Valor Percebido):*\n` +
-      `"Olá [Nome], aqui é o suporte estratégico do AtendeJá! Seu assistente inteligente já economizou horas da sua equipe nesses primeiros 10 dias. Como está sendo o retorno dos orçamentos?"\n\n` +
-      `*Mensagem 2 (Dia 13 — Oferta de Continuidade sem interrupção):*\n` +
-      `"[Nome], para garantir que o seu atendimento automatizado de orçamentos não pare ao fim do teste, liberamos condições especiais no plano Pro com planejamento mensal incluso."\n\n` +
-      `*Mensagem 3 (Dia 15 — Ativação final via Pix):*\n` +
-      `"Seu período de avaliação termina hoje. Para manter seus assistentes e histórico ativos, clique aqui e confirme sua assinatura em 1 minuto via Pix."`;
+    text = 💬 Script de Conversão: Trial (Teste) → Plano Pago\n\n +
+      Mensagem 1 (Dia 10 do teste — Valor Percebido):\n +
+      "Olá [Nome], aqui é o suporte estratégico do AtendeJá! Seu assistente inteligente já economizou horas da sua equipe nesses primeiros 10 dias. Como está sendo o retorno dos orçamentos?"\n\n +
+      Mensagem 2 (Dia 13 — Oferta de Continuidade sem interrupção):\n +
+      "[Nome], para garantir que o seu atendimento automatizado de orçamentos não pare ao fim do teste, liberamos condições especiais no plano Pro com planejamento mensal incluso."\n\n +
+      Mensagem 3 (Dia 15 — Ativação final via Pix):\n +
+      "Seu período de avaliação termina hoje. Para manter seus assistentes e histórico ativos, clique aqui e confirme sua assinatura em 1 minuto via Pix.";
   } else {
-    text = `🤖 **Assistente do Fundador AtendeJá**\n\n` +
-      `Entendi sua solicitação: "${prompt.trim()}".\n\n` +
-      `Como copiloto estratégico do AtendeJá, recomendo monitorar a relação entre clientes em teste e assinantes ativos, mantendo a qualificação de nichos afiada.\n\n` +
-      `*Aviso de Conexão:* Para respostas gerativas em tempo real utilizando os modelos mais avançados de **${provider.toUpperCase()}** (${activeModel}), acesse a aba **Conexões de API** no menu lateral e cadastre sua chave oficial.`;
+    text = 🤖 Assistente do Fundador AtendeJá\n\n +
+      Entendi sua solicitação: "${prompt.trim()}".\n\n +
+      Como copiloto estratégico do AtendeJá, recomendo monitorar a relação entre clientes em teste e assinantes ativos, mantendo a qualificação de nichos afiada.\n\n +
+      Aviso de Conexão: Para respostas gerativas em tempo real utilizando os modelos mais avançados de ${provider.toUpperCase()} (${activeModel}), acesse a aba Conexões de API no menu lateral e cadastre sua chave oficial.;
   }
 
   return { ok: true, reply: text, provider: provider, model: activeModel, external: false };
@@ -862,7 +862,7 @@ async function handleAdmin(req, res, url, parts) {
       });
     } catch (_e) {}
 
-    return send(res, 200, { ok: true, message: `Plano ${planCode} atualizado com sucesso.`, data: updates });
+    return send(res, 200, { ok: true, message: Plano ${planCode} atualizado com sucesso., data: updates });
   }
 
   if (req.method === "GET" && route === "landing-page-config") {
@@ -951,7 +951,7 @@ async function handleAdmin(req, res, url, parts) {
 
     return send(res, 200, {
       ok: true,
-      message: `Configuração de ${provider.toUpperCase()} atualizada com sucesso.`,
+      message: Configuração de ${provider.toUpperCase()} atualizada com sucesso.,
       data: {
         provider,
         configured: Boolean(keyToSave),
@@ -970,7 +970,7 @@ async function handleAdmin(req, res, url, parts) {
     const current = raw[provider] || {};
 
     let apiKey = (body.apiKey && !body.apiKey.includes("••••")) ? body.apiKey.trim() : (current.apiKey || "");
-    if (!apiKey) throw fail(400, `Nenhuma chave informada ou salva para ${provider.toUpperCase()}`);
+    if (!apiKey) throw fail(400, Nenhuma chave informada ou salva para ${provider.toUpperCase()});
 
     const model = body.model || current.model || "";
     const baseUrl = body.baseUrl || current.baseUrl || "";
@@ -1037,20 +1037,26 @@ async function handleClient(req, res, parts) {
   } else if (Array.isArray(rows) && rows.length && req.method === "PATCH") {
     const body = await readBody(req);
     const fields = {
+⚠️  Response truncated (finish_reason='length') - model hit max output tokens
       p_company_name: String(body.company_name || rows[0].company_name).trim().slice(0, 160),
       p_attendant_name: String(body.attendant_name || "").trim().slice(0, 160),
       p_niche: String(body.niche || "").trim().slice(0, 120),
       p_city: String(body.city || "").trim().slice(0, 120),
       p_whatsapp: String(body.whatsapp || "").replace(/[^0-9+() -]/g, "").slice(0, 32),
-      p_social_type: ["Instagram", "Facebook", "TikTok", "YouTube"].includes(body.social_type) ? body.social_type : "Instagram",
-      p_social_url: String(body.social_url || "").trim().slice(0, 500),
-      p_logo_url: ""
-    };
-    await supabaseUserRpc(token, "register_client_profile", fields);
-    rows = await supabaseRest("clients?" + query.toString());
-  }
-  if (!Array.isArray(rows) || !rows.length) throw fail(404, "Perfil do contratante não encontrado");
-  return send(res, 200, { profile: rows[0] });
+      p_social_type: ["Instagram", "Facebook", "TikTok", "YouTube"].Pasta aqui está a continuação do arquivo server.js com a correção aplicada. Vou entregar o restante que faltou:
+
+
+    p_city: String(body.city || "").trim().slice(0, 120),
+    p_whatsapp: String(body.whatsapp || "").replace(/[^0-9+() -]/g, "").slice(0, 32),
+    p_social_type: ["Instagram", "Facebook", "TikTok", "YouTube"].includes(body.social_type) ? body.social_type : "Instagram",
+    p_social_url: String(body.social_url || "").trim().slice(0, 500),
+    p_logo_url: ""
+  };
+  await supabaseUserRpc(token, "register_client_profile", fields);
+  rows = await supabaseRest("clients?" + query.toString());
+}
+if (!Array.isArray(rows) || !rows.length) throw fail(404, "Perfil do contratante não encontrado");
+return send(res, 200, { profile: rows[0] });
 }
 
 async function handlePaymentWebhook(req, res) {
