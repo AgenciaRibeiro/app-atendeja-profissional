@@ -114,4 +114,23 @@ Sempre que a tarefa envolver criação, alteração ou consulta de tabelas no Po
   - **Proteção do Service Role:** Uso estritamente restrito ao servidor interno. Nunca expor no frontend ou versionamento. Em testes e rotinas comuns de usuários, usar credenciais autenticadas sob RLS.
   - **Armazenamento e Assíncrono:** Arquivos no Supabase Storage organizados por `organization_id` com políticas RLS de storage; filas, jobs e webhooks sempre carregando e validando o `tenant_id`.
 
+---
+
+### 8. DevOps & Infraestrutura: Skill `devops-infrastructure-docker-coolify-vps`
+Sempre que a tarefa envolver Docker, Dockerfile, docker-compose, deploys no Coolify, configuração de servidores VPS, healthchecks de containers, rotinas de backup, certificados SSL/HTTPS, monitoramento de recursos (CPU, RAM, disco) ou portas de rede:
+
+- **Ativação Obrigatória da Skill `devops-infrastructure-docker-coolify-vps`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `devops-infrastructure-docker-coolify-vps`** (`.agents/skills/devops-infrastructure-docker-coolify-vps/SKILL.md`).
+  - Ativação **100% autônoma** diante de qualquer configuração de containers, infraestrutura ou deploy.
+- **Sinergia DevOps:**
+  - Trabalha em conjunto com `debugging-and-error-recovery` (diagnóstico de portas, falhas de healthcheck e crashes de container) e `security-and-hardening` (blindagem de chaves SSH, firewall, isolamento de segredos no `.env` e renovação SSL).
+- **Hierarquia Inegociável:**
+  - **Disponibilidade → Integridade dos dados → Segurança → Recuperação → Eficiência de custos.**
+- **Diretrizes Mandatórias de Infraestrutura:**
+  - **Persistência Segura:** O filesystem do container é volátil. Dados críticos (Postgres, arquivos, uploads) devem residir estritamente em volumes persistentes. Jamais executar `docker system prune --volumes` sem autorização explícita e backup validado.
+  - **Healthchecks Confiáveis:** Não aceitar status de container "up" sem validar a resposta HTTP real da aplicação (`/health` ou `/ready` retornando `200`).
+  - **Estratégia de Backup 3-2-1:** Backups automatizados do banco de dados (ex: `pg_dump`), validação periódica de integridade e cópia armazenada fora da VPS primária.
+  - **Deploy Seguro e Rollback:** Testar builds antes de promover a produção e manter histórico de imagem/versão estável para reversão imediata em caso de falha.
+
+
 
