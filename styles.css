@@ -128,7 +128,12 @@ main,
 
 .header-nav a:hover,
 .header-nav a:focus-visible {
+  /* Efeito hover sutil - sem visual de botão */
   color: var(--text-primary);
+  background-color: rgba(16, 185, 129, 0.03);
+  padding: 0 4px;
+  border-radius: 0;
+  margin: 0 -4px;
   outline: none;
 }
 
