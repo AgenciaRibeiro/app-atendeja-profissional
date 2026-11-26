@@ -533,7 +533,7 @@ const DEFAULT_LP_CONFIG = {
   hero_subtitle: "Responda leads em segundos, organize seus orçamentos e nunca mais esqueça um retorno combinado.",
   hero_btn_primary_text: "Escolher meu plano",
   hero_btn_primary_url: "#planos",
-  hero_btn_secondary_text: "Testar agora",
+  hero_btn_secondary_text: "Começar agora",
   hero_preview_title: "Fluxo em tempo real",
   hero_step1_title: "Lead chega",
   hero_step1_desc: "\"Oi, preciso de um orçamento...\"",
@@ -554,7 +554,7 @@ const DEFAULT_LP_CONFIG = {
   niches_list: "Elétrica e Hidráulica, Climatização, Marcenaria, Reformas e Obras, Estética Automotiva, Serviços",
 
   plans_title: "Planos transparentes para o tamanho da sua operação",
-  plans_subtitle: "Sem fidelidade, teste grátis e ativação imediata no WhatsApp.",
+  plans_subtitle: "Sem fidelidade, ativação imediata e o investimento que se paga no 1º serviço.",
   plan_essencial_desc: "Para autônomos e quem está começando.",
   plan_essencial_btn: "Contratar",
   plan_pro_badge: "Mais escolhido",

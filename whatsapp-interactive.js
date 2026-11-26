@@ -223,11 +223,11 @@
       var reply = "";
 
       if (lower.indexOf("preço") !== -1 || lower.indexOf("plano") !== -1 || lower.indexOf("valor") !== -1 || lower.indexOf("custa") !== -1) {
-        reply = "Nossos planos começam a partir de R$ 49/mês no Essencial! Escolha seu plano no botão acima para começar o teste grátis.";
+        reply = "Nossos planos começam a partir de R$ 49/mês no Essencial! É um investimento que se paga já no primeiro orçamento fechado pelo sistema. Escolha o seu plano acima para garantir seu acesso!";
       } else if (lower.indexOf("como funciona") !== -1 || lower.indexOf("funciona") !== -1) {
         reply = "O AtendeJá se conecta ao seu WhatsApp oficial, responde seus clientes em segundos 24 horas por dia e organiza os orçamentos no painel!";
       } else if (lower.indexOf("teste") !== -1 || lower.indexOf("testar") !== -1 || lower.indexOf("gratis") !== -1 || lower.indexOf("grátis") !== -1) {
-        reply = "Você pode testar por 15 dias sem compromisso! Clique no botão 'Testar agora' no topo da página.";
+        reply = "Você ativa sua conta na hora escolhendo o melhor plano para sua empresa. A infraestrutura 24h entra no ar imediatamente e o investimento se paga logo no 1º cliente! 🚀";
       } else {
         reply = "Viu como a resposta é instantânea? Com o AtendeJá, você nunca mais deixa um cliente esperando no WhatsApp! 🚀";
       }

@@ -219,6 +219,19 @@ main,
   gap: 12px;
 }
 
+.hero-subnote {
+  margin: 14px 0 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-subnote strong {
+  color: #25d366;
+}
+
 .btn-primary,
 .btn-outline {
   display: inline-flex;
