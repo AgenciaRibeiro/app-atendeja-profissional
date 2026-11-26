@@ -153,6 +153,27 @@ Sempre que a tarefa envolver redação de landing pages, textos comerciais, mens
   - **Tratamento Respeitoso de Objeções:** Desconstruir objeções ("já faço no WhatsApp", "não tenho tempo", "muito caro", "não entendo de tecnologia") com empatia, sem insistência robótica ou pressão agressiva.
   - **Comunicação Ética e Sem Promessas Falsas:** Jamais inventar depoimentos, estatísticas sem fontes ou garantir faturamentos mágicos.
 
+---
+
+### 10. Onboarding Sem Atrito (Zero Friction): Skill `onboarding-sem-atrito-zero-friction`
+Sempre que a tarefa envolver telas de criação de conta, cadastro inicial de empresa/prestador, fluxo de ativação, conexão de WhatsApp por QR Code, boas-vindas ou transição para o primeiro acesso:
+
+- **Ativação Obrigatória da Skill `onboarding-sem-atrito-zero-friction`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `onboarding-sem-atrito-zero-friction`** (`.agents/skills/onboarding-sem-atrito-zero-friction/SKILL.md`).
+  - Ativação **100% autônoma** sempre que trabalhar no fluxo de entrada e primeiro uso.
+- **Estrutura Máxima em 3 Etapas:**
+  1. **Etapa 1 (Criar Conta):** Apenas dados essenciais (Nome, e-mail, senha e nome da empresa/atividade). Criação automática da organização e associação com tenant_id imediato.
+  2. **Etapa 2 (Conectar WhatsApp):** Apresentação clara de QR Code gerado pelo backend. O usuário jamais vê URLs de API, webhooks ou tokens.
+  3. **Etapa 3 (Boas-Vindas e Painel):** Confirmação de status conectado, número identificado e liberação imediata do painel principal com tour rápido.
+- **Sinergia Obrigatória Multi-Skill:**
+  - `frontend-mobile-first-and-micro-interactions` (UI tátil >= 44px, QR Code responsivo no celular, sem rolagem);
+  - `whatsapp-api-and-webhooks` (gerenciamento automático de sessões, expiração/renovação de QR Code nos bastidores);
+  - `backend-multi-tenant-and-security` (isolamento de tenant no banco e proteção de chaves restritas ao servidor);
+  - `copywriting-focused-on-service-provider-objections` (linguagem simples, humana e sem jargões técnicos).
+- **Cobertura Visual dos 8 Estados:**
+  - Tratar obrigatoriamente: *Não conectado, Preparando conexão, Aguardando leitura do QR Code, Conectando, Conectado, Conexão expirada, Falha na conexão e Desconectado*.
+
+
 
 
 
