@@ -133,6 +133,27 @@ Sempre que a tarefa envolver Docker, Dockerfile, docker-compose, deploys no Cool
   - **Deploy Seguro e Rollback:** Testar builds antes de promover a produção e manter histórico de imagem/versão estável para reversão imediata em caso de falha.
   - **Monitoramento Centralizado e Alertas Inteligentes:** Monitoramento contínuo de VPS, containers, PostgreSQL, endpoints de saúde, backups e SSL. Alertas categorizados (Crítico, Atenção, Informativo) via Telegram/WhatsApp, com deduplicação, notificação de recuperação e arquitetura leve (Uptime Kuma, métricas).
 
+---
+
+### 9. Copywriting Comercial e Tratamento de Objeções: Skill `copywriting-focused-on-service-provider-objections`
+Sempre que a tarefa envolver redação de landing pages, textos comerciais, mensagens de WhatsApp, fluxos de nutrição, scripts de atendimento ou tratamento de objeções de prestadores de serviços técnicos autônomos (climatização, elétrica, marcenaria, etc.):
+
+- **Ativação Obrigatória da Skill `copywriting-focused-on-service-provider-objections`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `copywriting-focused-on-service-provider-objections`** (`.agents/skills/copywriting-focused-on-service-provider-objections/SKILL.md`).
+  - Ativação **100% autônoma** sempre que redigir ou estruturar abordagens de vendas ou atendimento.
+- **Sinergia Obrigatória com `prompt-engineering-and-specialized-ai`:**
+  - **A LLM interpreta:** Identifica o nicho, a intenção e a dor real do prestador (ex: técnico no alto de uma escada que não pode parar para responder o WhatsApp).
+  - **O Copywriting traduz:** Converte tecnologia (IA, CRM, Kanban, API) em benefícios concretos do dia a dia ("atendimento funcionando enquanto você trabalha", "seus orçamentos organizados num só lugar").
+  - **O Backend valida e calcula:** Preços, regras comerciais e autorizações são 100% determinísticas em código/Postgres.
+  - **O CRM/Kanban persiste:** Registra o lead, segmento, dores e objeções identificadas no pipeline multi-tenant.
+- **Hierarquia Inegociável:**
+  - **Dor real → Identificação → Benefício → Confiança → Conversão.**
+- **Diretrizes Mandatórias de Copywriting:**
+  - **Zero Jargão Tecnológico:** O cliente não compra IA ou Docker; compra tranquilidade e parar de perder clientes por demora no atendimento.
+  - **Tratamento Respeitoso de Objeções:** Desconstruir objeções ("já faço no WhatsApp", "não tenho tempo", "muito caro", "não entendo de tecnologia") com empatia, sem insistência robótica ou pressão agressiva.
+  - **Comunicação Ética e Sem Promessas Falsas:** Jamais inventar depoimentos, estatísticas sem fontes ou garantir faturamentos mágicos.
+
+
 
 
 
