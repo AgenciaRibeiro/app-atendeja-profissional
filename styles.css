@@ -485,6 +485,7 @@ main,
   -ms-overflow-style: none; /* IE/Edge */
   padding: 4px 2px 8px;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .niches-strip::-webkit-scrollbar {

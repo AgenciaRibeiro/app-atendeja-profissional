@@ -551,7 +551,7 @@ const DEFAULT_LP_CONFIG = {
   sol3_copy: "Retorne para o cliente exatamente na data prometida e aumente sua taxa de fechamento.",
 
   niches_title: "Feito para quem vive de atendimento e orçamento",
-  niches_list: "Elétrica e Hidráulica, Climatização, Marcenaria, Reformas e Obras, Estética Automotiva, Consultorias e Serviços",
+  niches_list: "Elétrica e Hidráulica, Climatização, Marcenaria, Reformas e Obras, Estética Automotiva, Serviços",
 
   plans_title: "Planos transparentes para o tamanho da sua operação",
   plans_subtitle: "Sem fidelidade, teste grátis e ativação imediata no WhatsApp.",
