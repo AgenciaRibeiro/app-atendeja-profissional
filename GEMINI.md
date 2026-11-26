@@ -31,3 +31,17 @@ Sempre que a tarefa envolver integrações com WhatsApp (WAHA, Evolution API, Me
   - **Idempotência e Proteção contra Replay:** Deduplicar eventos por ID único e validar janelas temporais de timestamps.
   - **Isolamento Absoluto Multi-Tenant:** Garantir que o payload de um tenant nunca acesse ou modifique dados de outro tenant.
   - **Sanitização de Logs e Erros:** Nunca registrar segredos em logs, telemetria, stack traces ou mensagens de erro enviadas ao cliente.
+
+---
+
+### 3. Diagnóstico e Resolução de Erros: Skill `debugging-and-error-recovery`
+Sempre que ocorrer falha de deploy no Coolify, erros no Dockerfile, containers marcados como `unhealthy`, problemas de portas ocupadas/bloqueadas (`Connection refused`, `IPv6 vs IPv4`), reinicialização de containers ou erros de execução em produção:
+
+- **Ativação Obrigatória da Skill `debugging-and-error-recovery`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `debugging-and-error-recovery`** (`.agents/skills/debugging-and-error-recovery/SKILL.md`).
+  - Ativação **100% autônoma** diante de qualquer erro de build, infraestrutura, deploy ou runtime.
+- **Diretrizes Mandatórias de Diagnóstico:**
+  - **Diagnóstico Antes da Modificação:** Coletar e inspecionar a primeira mensagem de erro real nos logs do Coolify/Docker antes de propor qualquer correção.
+  - **Não Mascarar Sintomas:** Jamais apenas reiniciar o container ou aumentar timeouts para esconder um serviço que não inicializou corretamente.
+  - **Mudança Mínima e Precisa:** Alterar somente a causa raiz confirmada por evidências.
+  - **Validação Pós-Correção:** Comprovar a recuperação testando a resposta real do serviço (`curl/wget http://127.0.0.1:PORTA/ENDPOINT`) e a transição para `healthy`.
