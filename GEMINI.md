@@ -62,3 +62,18 @@ Sempre que a tarefa envolver gateways de WhatsApp (WAHA, Evolution API, Meta Wha
   - **Webhooks Rápidos e Confiáveis:** Responder ao webhook HTTP rapidamente e delegar processamento pesado para filas assíncronas com tratamento de idempotência e prevenção de loops.
   - **Reconexão com Exponential Backoff:** Reconectar com intervalo progressivo e limites claros, sem contornar autenticações e solicitando intervenção quando um novo QR Code for exigido.
   - **Integração com n8n:** Preservar IDs de mensagens, respeitar pausas de atendimento para operadores humanos e evitar duplicidade.
+
+---
+
+### 5. Engenharia de Prompts e IA Especializada: Skill `prompt-engineering-and-specialized-ai`
+Sempre que a tarefa envolver criação, ajuste ou teste de prompts de IA, assistentes virtuais de atendimento por segmento (climatização, elétrica, marcenaria, etc.), extração de dados JSON de conversas, regras de orçamento ou alimentação do CRM Kanban:
+
+- **Ativação Obrigatória da Skill `prompt-engineering-and-specialized-ai`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `prompt-engineering-and-specialized-ai`** (`.agents/skills/prompt-engineering-and-specialized-ai/SKILL.md`).
+  - Ativação **100% autônoma** diante de qualquer tarefa de IA, prompts ou assistentes.
+- **Diretriz Arquitetural Mandatória de 4 Camadas:**
+  - **CAMADA 1 (LLM):** Conversa humanizada, identifica intenções, faz perguntas de triagem e nunca alucina preços ou disponibilidade.
+  - **CAMADA 2 (Extração Estruturada):** Transforma a conversa em JSON validável; usa `null` para pendências sem suposições.
+  - **CAMADA 3 (Backend Determinístico):** Autoridade máxima comercial. Todos os cálculos de mão de obra, materiais e orçamentos são executados pelo backend (Node.js/Postgres), JAMAIS pela matemática do LLM.
+  - **CAMADA 4 (CRM + Kanban):** Atualiza leads sem duplicidade, move cards nas etapas corretas do funil e define próximas ações comerciais.
+- **Regras de Autoridade:** A IA interpreta e conversa; o backend calcula, autoriza e executa; o CRM/Kanban persiste e organiza.
