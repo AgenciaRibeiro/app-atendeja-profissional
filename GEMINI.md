@@ -1,3 +1,7 @@
+> **PROTOCOLO OPERACIONAL OBRIGATÓRIO:** Antes de qualquer tarefa, leia `AGENTS.md` na raiz e siga sua governança. Para continuidade, consulte `docs/execucao-ia/ESTADO_ATUAL.md`, `FILA_DE_ETAPAS.md` e `PENDENCIAS_E_BLOQUEIOS.md`. A pergunta “O que vamos resolver agora?” é somente consulta de status: recupere a próxima etapa exata, não execute alterações. Preserve as Skills e regras especializadas deste arquivo; não amplie escopo nem avance etapas sem auditoria e autorização aplicável.
+
+---
+
 # Regras e Diretrizes do Projeto AtendeJá
 
 ## Ativação Automática de Skills
