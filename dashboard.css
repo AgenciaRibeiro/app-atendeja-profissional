@@ -958,3 +958,60 @@ table.leads-table { width: 100%; border-collapse: collapse; min-width: 780px; fo
 }
 .btn-google:hover { background: #ffffff; }
 .auth-note { margin-top: 14px; font-size: 12px; color: var(--text-secondary); }
+
+/* KPI Summary Cards */
+.kpi-summary {
+  padding: 1.5rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.kpi-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card.kpi-leads { border-top: 3px solid var(--accent-emerald); }
+.kpi-card.kpi-faturamento { border-top: 3px solid var(--accent-gold); }
+.kpi-card.kpi-conversas { border-top: 3px solid #f6e05e; color: var(--bg-main); }
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+.kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+.kpi-trend {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.7rem;
+}
+.kpi-trend svg {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+/* Reduced motion for KPI */
+@media (prefers-reduced-motion: reduce) {
+  .kpi-card {
+    transition: none;
+  }
+}

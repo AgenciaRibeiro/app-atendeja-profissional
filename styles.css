@@ -1103,3 +1103,95 @@ main,
     transition: none;
   }
 }
+
+/* Card enhancements */
+.glow-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.glow-card:hover {
+  border-color: var(--accent-emerald-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* Focus states for accessibility */
+.btn-primary:focus-visible,
+.btn-outline:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-emerald);
+  outline-offset: 2px;
+}
+
+/* Flow nodes animation */
+.flow-nodes {
+  counter-reset: flow-step;
+}
+.flow-node {
+  counter-increment: flow-step;
+}
+.flow-node::before {
+  content: counter(flow-step);
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  color: var(--bg-main);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Solution cards on hover */
+.solution-card:hover .card-index {
+  color: var(--accent-emerald);
+}
+
+/* Hero button hover */
+.hero-actions .btn-primary:hover {
+  background: var(--accent-gold);
+  color: var(--bg-main);
+}
+
+/* Navigation link underline on hover */
+.header-nav a:hover {
+  color: var(--accent-emerald);
+  text-shadow: 0 0 10px rgba(37, 211, 102, 0.4);
+}
+
+/* Section title */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-emerald), var(--accent-gold));
+  border-radius: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

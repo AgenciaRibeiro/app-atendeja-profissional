@@ -168,6 +168,8 @@ async function readRawBody(req) {
   for await (const chunk of req) {
     length += chunk.length;
     if (length > 1024 * 1024) throw fail(413, "Corpo da solicitação excede 1 MB");
+  // Rate limit reforçado por plano
+  if (req.userPlan && req.userPlan.max_apis && entry.count > req.userPlan.max_apis * 15) throw fail(429, "Limite de API do seu plano atingido");
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);
@@ -369,7 +371,7 @@ async function enforcePlan(client, resource, connection, creating, payload, reco
     }
     if (period === "mensal") throw fail(403, "Planejamento mensal exige plano superior");
   }
-  if (resource === "assistants" && payload.capacidades !== undefined) {
+  if (resource === "assistants" if (resource === "assistants" && payload.capacidades !== undefined) {if (resource === "assistants" && payload.capacidades !== undefined) { payload.capacidades !== undefined if (resource === "assistants" && payload.capacidades !== undefined) {if (resource === "assistants" && payload.capacidades !== undefined) { client) {
     if (!Array.isArray(payload.capacidades) || payload.capacidades.some(cap => !caps.capabilities.includes(cap))) {
       throw fail(403, "Uma ou mais capacidades não estão disponíveis no plano atual");
     }
@@ -378,12 +380,12 @@ async function enforcePlan(client, resource, connection, creating, payload, reco
   if (resource === "assistants") {
     await connection.query("SELECT pg_advisory_xact_lock(74591, hashtext($1))", [client.id]);
     const count = await connection.query("SELECT COUNT(*)::int AS total FROM public.assistants WHERE client_id = $1", [client.id]);
-    if (count.rows[0].total >= caps.max_assistants) throw fail(403, "Limite de assistentes do plano atingido");
+    if (count.rows[0].total >= caps.max_assistants) throw fail(403, `Limite de ${caps.max_assistants} assistentes do seu plano ${caps.code} atingido.Upgrade para mais.`);
   }
   if (resource === "api_connections") {
     await connection.query("SELECT pg_advisory_xact_lock(74591, hashtext($1))", [client.id]);
     const count = await connection.query("SELECT COUNT(*)::int AS total FROM public.api_connections WHERE client_id = $1", [client.id]);
-    if (count.rows[0].total >= caps.max_apis) throw fail(403, "Limite de conexões do plano atingido");
+    if (count.rows[0].total >= caps.max_apis) throw fail(403, `Limite de ${caps.max_apis} conexões API do seu plano ${caps.code} atingido.Upgrade para mais.`);
   }
 }
 
@@ -464,7 +466,7 @@ function sanitizeWorkspaceValue(value, depth = 0) {
   if (!value || typeof value !== "object") return value;
   const result = {};
   for (const [key, item] of Object.entries(value)) {
-    if (["logoDataUrl", "plano", "subscriptionStatus", "trialEndsAt", "cloudClientId"].includes(key)) continue;
+    const sensitiveKeys = new Set(["logoDataUrl", "plano", "subscriptionStatus", "trialEndsAt", "cloudClientId", "api_key", "access_token", "refresh_token", "secret", "private_key"]);.includes(key)) continue;
     if (/^(?:api_?key|access_?token|refresh_?token|password|secret|authorization)$/i.test(key)) continue;
     if (key === "apiKeyMask" || key === "key_last4" || key === "hasKey") result[key] = item;
     else if (/key|token|password|secret|authorization/i.test(key)) continue;
