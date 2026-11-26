@@ -1200,3 +1200,199 @@ select:focus-visible {
     animation: none !important;
   }
 }
+
+
+/* ============================================
+   WhatsApp Phone Frame Styles - Hero Section
+   ============================================ */
+
+/* Hero WhatsApp Card */
+.hero-whatsapp-card {
+  position: relative;
+  width: 100%;
+  max-width: 350px;
+  background: var(--bg-elevated);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Phone frame - the whole device */
+.whatsapp-phone-frame {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 4px 4px 0 4px;
+  /* Simulate phone screen */
+}
+
+/* Status bar at top */
+.whatsapp-status-bar {
+  height: 20px;
+  background: #fff;
+  /* Simulate status bar gradient/pattern */
+  border-radius: 2px 2px 0 0;
+}
+
+/* Header area */
+.whatsapp-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  justify-content: space-between;
+}
+
+.whatsapp-header .whatsapp-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3WA7C1;
+  flex-shrink: 0;
+}
+
+.whatsapp-header .whatsapp-name {
+  color: #262626;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+/* Chat area */
+.whatsapp-chat-area {
+  padding: 8px 12px;
+  flex: 1;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Message bubbles */
+.whatsapp-message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.whatsapp-message .whatsapp-bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  position: relative;
+  font-size: 13px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.whatsapp-message.received .whatsapp-bubble {
+  background: #f1f3f4;
+  color: #121212;
+  margin-left: auto;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.whatsapp-message.sent .whatsapp-bubble {
+  background: #3WA7C1;
+  color: #fff;
+  margin-right: auto;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+/* Tail for bubbles (optional simplified) */
+.whatsapp-message .whatsapp-bubble::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  display: none; /* Simplified - full WhatsApp tails would need more CSS */
+}
+
+/* Message time */
+.whatsapp-time {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.4);
+  margin-top: 2px;
+  text-align: right;
+}
+
+.whatsapp-message.received .whatsapp-time {
+  text-align: left;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.whatsapp-message.sent .whatsapp-time {
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+/* Bottom bar */
+.whatsapp-bottom-bar {
+  padding: 4px 12px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* Input area - keep outside the phone for usability */
+.whatsapp-input-area {
+  padding: 8px 12px;
+  border-top: 1px solid #e0e0e0;
+  background: var(--bg-elevated);
+  margin-top: 8px;
+}
+
+.whatsapp-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  border-radius: 20px;
+  padding: 4px;
+}
+
+.whatsapp-input-wrapper svg {
+  width: 18px;
+  height: 18px;
+  color: #ccc;
+}
+
+.whatsapp-input-wrapper input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  outline: none;
+}
+
+.whatsapp-input-wrapper button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #25D366;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.whatsapp-input-wrapper button:hover {
+  background: #28C861;
+}

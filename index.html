@@ -51,36 +51,53 @@
         </div>
 
         <aside class="hero-whatsapp-card" aria-label="Tela de conversa WhatsApp">
-          <div class="whatsapp-header">
-            <span class="whatsapp-status online"></span>
-            <span class="whatsapp-name">Mariana S.</span>
+          <!-- Phone frame -->
+          <div class="whatsapp-phone-frame">
+            <!-- Top status bar -->
+            <div class="whatsapp-status-bar"></div>
+            
+            <!-- Header with name -->
+            <div class="whatsapp-header">
+              <span class="whatsapp-status online"></span>
+              <span class="whatsapp-name">Mariana S.</span>
+            </div>
+            
+            <!-- Chat area -->
+            <div class="whatsapp-chat-area">
+              <div class="whatsapp-message received">
+                <div class="whatsapp-bubble">
+                  <p>Oi, tudo bem? Preciso de um orçamento para reformar a cozinha.</p>
+                  <span class="whatsapp-time">14:30</span>
+                </div>
+              </div>
+              <div class="whatsapp-message sent">
+                <div class="whatsapp-bubble">
+                  <p>Obrigado pelo contato! Em quanto tempo você costuma reformar? Precisa de ajuda para escolher materiais?</p>
+                  <span class="whatsapp-time">14:31</span>
+                </div>
+              </div>
+              <div class="whatsapp-message received">
+                <div class="whatsapp-bubble">
+                  <p>Provavelmente em 2 semanas. Preciso de algo moderno, mas dentro do orçamento.</p>
+                  <span class="whatsapp-time">14:32</span>
+                </div>
+              </div>
+              <div class="whatsapp-message sent">
+                <div class="whatsapp-bubble">
+                  <p>Entendi! Tenho algumas sugestões de layout que funcionam bem para cozinhas modernas. Posso te enviar um projeto preliminar em até 24h.</p>
+                  <span class="whatsapp-time">14:33</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Bottom bar with time -->
+            <div class="whatsapp-bottom-bar">
+              <span>14:33</span>
+            </div>
           </div>
-          <div class="whatsapp-chat-area">
-            <div class="whatsapp-message received">
-              <div class="whatsapp-bubble">
-                <p>Oi, tudo bem? Preciso de um orçamento para reformar a cozinha.</p>
-                <span class="whatsapp-time">14:30</span>
-              </div>
-            </div>
-            <div class="whatsapp-message sent">
-              <div class="whatsapp-bubble">
-                <p>Obrigado pelo contato! Em quanto tempo você costuma reformar? Precisa de ajuda para escolher materiais?</p>
-                <span class="whatsapp-time">14:31</span>
-              </div>
-            </div>
-            <div class="whatsapp-message received">
-              <div class="whatsapp-bubble">
-                <p>Provavelmente em 2 semanas. Preciso de algo moderno, mas dentro do orçamento.</p>
-                <span class="whatsapp-time">14:32</span>
-              </div>
-            </div>
-            <div class="whatsapp-message sent">
-              <div class="whatsapp-bubble">
-                <p>Entendi! Tenho algumas sugestões de layout que funcionam bem para cozinhas modernas. Posso te enviar um projeto preliminar em até 24h.</p>
-                <span class="whatsapp-time">14:33</span>
-              </div>
-            </div>
-          </div>
+          <!-- /Phone frame -->
+
+          <!-- Input area remains outside the phone for usability -->
           <div class="whatsapp-input-area">
             <div class="whatsapp-input-wrapper">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3l6 6l6-6"/></svg>
