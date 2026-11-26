@@ -54,6 +54,8 @@ Sempre que a tarefa envolver gateways de WhatsApp (WAHA, Evolution API, Meta Wha
 - **Ativação Obrigatória da Skill `whatsapp-api-and-webhooks`:**
   - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `whatsapp-api-and-webhooks`** (`.agents/skills/whatsapp-api-and-webhooks/SKILL.md`).
   - Ativação **100% autônoma** sempre que envolver WhatsApp ou mensagens.
+- **Tríade Sinérgica Obrigatória:**
+  - A skill `whatsapp-api-and-webhooks` **DEVE trabalhar em conjunto com `security-and-hardening`** (para blindar tokens de WhatsApp, mascarar chaves e validar assinaturas HMAC de webhooks) **e com `debugging-and-error-recovery`** (para diagnosticar quedas de container, portas bloqueadas e falhas de healthcheck do gateway no Docker/Coolify).
 - **Diretrizes Mandatórias de WhatsApp & Mensageria:**
   - **Gerenciamento Preciso de Estados:** Manter rastreabilidade completa (`CREATED`, `CONNECTING`, `QR_REQUIRED`, `CONNECTED`, `DISCONNECTED`, `RECONNECTING`, `ERROR`, `STOPPED`).
   - **QR Code Seguro:** Exibir somente quando necessário, controlar expiração, remover após autenticação e NUNCA salvar QR Code permanentemente ou em logs.

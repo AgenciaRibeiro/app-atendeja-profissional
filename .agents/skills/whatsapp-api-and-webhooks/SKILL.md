@@ -2,7 +2,9 @@
 name: whatsapp-api-and-webhooks
 description: >-
   Especialista em integração de APIs de WhatsApp, gateways, gerenciamento de
-  sessões, webhooks, eventos em tempo real e recuperação de conexões. Use
+  sessões, webhooks, eventos em tempo real e recuperação de conexões. Trabalha
+  em conjunto com security-and-hardening (proteção de segredos e webhooks) e
+  debugging-and-error-recovery (diagnóstico de infraestrutura e falhas). Use
   SEMPRE que envolver WAHA, Evolution API, Meta WhatsApp Cloud API, QR Code,
   conexão ou desconexão de instâncias, envio/recebimento de mensagens,
   webhooks de mensagens ou status, integração com n8n ou reconexão automática.
@@ -339,3 +341,20 @@ A Skill deve desenvolver integrações robustas, independentes de provedor e pre
 Não presumir que WAHA, Evolution API e Meta Cloud API possuem a mesma arquitetura ou funcionalidades.
 Consultar sempre a documentação oficial da versão utilizada.
 Priorizar disponibilidade, segurança, rastreabilidade e continuidade operacional.
+
+## 14. Integração Sinérgica com outras Skills
+
+Esta Skill **deve trabalhar obrigatoriamente em conjunto** com:
+
+1. **`security-and-hardening`**:
+   - Assegurar mascaramento de tokens e chaves no backend e em telas administrativas.
+   - Aplicar validação estrita de assinaturas criptográficas (HMAC sobre corpo bruto) nos webhooks de mensagens e status.
+   - Garantir isolamento absoluto entre tenants (empresas) para que eventos do cliente A nunca toquem dados do cliente B.
+   - Sanitizar logs e mensagens de erro para nunca registrar tokens ou payloads com dados sensíveis.
+
+2. **`debugging-and-error-recovery`**:
+   - Diagnosticar falhas de conexão, queda de containers de instâncias de WhatsApp (WAHA, Evolution API) no Docker/Coolify e problemas de portas (`Connection refused`, `IPv6 vs IPv4`).
+   - Coletar a primeira mensagem real de erro nos logs antes de aplicar correções.
+   - Validar a recuperação com testes de conectividade e status do healthcheck antes de declarar o serviço restabelecido.
+
+Com essa tríade (**`whatsapp-api-and-webhooks`** + **`security-and-hardening`** + **`debugging-and-error-recovery`**), a IA possui especialização simultânea na integração funcional, nos mecanismos de proteção contra vazamentos/ataques e na recuperação ágil de falhas de infraestrutura.
