@@ -77,3 +77,23 @@ Sempre que a tarefa envolver criação, ajuste ou teste de prompts de IA, assist
   - **CAMADA 3 (Backend Determinístico):** Autoridade máxima comercial. Todos os cálculos de mão de obra, materiais e orçamentos são executados pelo backend (Node.js/Postgres), JAMAIS pela matemática do LLM.
   - **CAMADA 4 (CRM + Kanban):** Atualiza leads sem duplicidade, move cards nas etapas corretas do funil e define próximas ações comerciais.
 - **Regras de Autoridade:** A IA interpreta e conversa; o backend calcula, autoriza e executa; o CRM/Kanban persiste e organiza.
+
+---
+
+### 6. Mobile-First e Micro-Interações: Skill `frontend-mobile-first-and-micro-interactions`
+Sempre que a tarefa envolver design ou implementação de telas para smartphone, navegação móvel (menu inferior, gaveta lateral, alcance do polegar), microinterações táteis, feedback visual (loading, sucesso, erro, skeletons, prevenção de clique duplo), formulários adaptados para teclado virtual, Kanban mobile ou orçamentos na tela do celular:
+
+- **Ativação Obrigatória da Skill `frontend-mobile-first-and-micro-interactions`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `frontend-mobile-first-and-micro-interactions`** (`.agents/skills/frontend-mobile-first-and-micro-interactions/SKILL.md`).
+  - Ativação **100% autônoma** sempre que trabalhar em telas ou componentes da aplicação.
+- **Sinergia com `frontend-ui-engineering`:**
+  - As duas skills de frontend atuam de forma coordenada: `frontend-ui-engineering` assegura design de nível de agência, tokens visuais e responsividade ampla; `frontend-mobile-first-and-micro-interactions` assegura ergonomia para uso com uma mão, áreas de toque >= 44 a 48px, microinterações de estado, acessibilidade touch e desempenho sob redes móveis.
+- **Hierarquia Inegociável:**
+  - **Usabilidade → Desempenho → Acessibilidade → Consistência → Estética.**
+- **Diretrizes Mandatórias Mobile:**
+  - **Áreas de Toque:** Interações com no mínimo 44 a 48px CSS, distanciamento seguro e botões primários acessíveis ao polegar.
+  - **Teclado e Formulários:** Tipos adequados de input (`tel`, `email`, `numeric`), preservação de dados em falhas e mensagens de erro contextualizadas.
+  - **Microinterações e Bloqueio Duplo:** Toda ação deve ter feedback imediato; botões devem bloquear temporariamente contra duplo clique em requisições assíncronas.
+  - **Tratamento de 9 Estados:** Cobrir integralmente: Carregando, Carregado, Vazio (Empty State), Erro, Sem Conexão, Em Andamento, Concluído, Não Autorizado e Desatualizado.
+  - **Nenhuma Operação Fictícia:** Jamais confirmar visualmente uma operação antes da validação do backend (ou garantir reversão visual em caso de falha de optimistic update).
+
