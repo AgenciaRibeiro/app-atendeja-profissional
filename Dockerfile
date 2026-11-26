@@ -26,9 +26,9 @@ USER appuser
 # Expor porta da aplicação
 EXPOSE 3000
 
-# Healthcheck do container
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+# Healthcheck do container (usando 127.0.0.1 para evitar resolução de IPv6 no Alpine)
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1
 
 # Comando de inicialização
 CMD ["npm", "start"]
