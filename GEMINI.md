@@ -97,3 +97,21 @@ Sempre que a tarefa envolver design ou implementação de telas para smartphone,
   - **Tratamento de 9 Estados:** Cobrir integralmente: Carregando, Carregado, Vazio (Empty State), Erro, Sem Conexão, Em Andamento, Concluído, Não Autorizado e Desatualizado.
   - **Nenhuma Operação Fictícia:** Jamais confirmar visualmente uma operação antes da validação do backend (ou garantir reversão visual em caso de falha de optimistic update).
 
+---
+
+### 7. Backend Multi-Tenant e Segurança RLS: Skill `backend-multi-tenant-and-security`
+Sempre que a tarefa envolver criação, alteração ou consulta de tabelas no PostgreSQL/Supabase, endpoints de API no Node.js/Next.js, regras de autenticação/autorização, manipulação de `tenant_id` ou `organization_id`, upload de arquivos no Storage, relatórios ou processamento assíncrono:
+
+- **Ativação Obrigatória da Skill `backend-multi-tenant-and-security`:**
+  - O agente **DEVE obrigatoriamente consultar e seguir as diretrizes da skill `backend-multi-tenant-and-security`** (`.agents/skills/backend-multi-tenant-and-security/SKILL.md`).
+  - Ativação **100% autônoma** diante de qualquer operação em banco de dados ou backend.
+- **Regra Fundamental de Isolamento:**
+  - A empresa ou profissional A **JAMAIS** poderá visualizar, consultar, modificar ou excluir dados da empresa B. O isolamento deve ser garantido no banco de dados e no backend, nunca dependendo exclusivamente de filtros da interface ou de cláusulas `WHERE` manuais.
+- **Diretrizes Mandatórias Multi-Tenant:**
+  - **Row Level Security (RLS) Mandatório:** Habilitar RLS em todas as tabelas com dados privados. Políticas para `SELECT`, `INSERT`, `UPDATE` e `DELETE` baseadas em `auth.uid()` e associação ativa em `organization_members`.
+  - **Anti-IDOR e Resolução de Sessão:** Nunca confiar em `tenant_id` ou `user_id` enviados no payload ou URL pelo frontend. O tenant e as permissões devem ser obtidos exclusivamente a partir da sessão autenticada no backend.
+  - **Integridade Referencial Composta:** Garantir que relacionamentos entre tabelas (ex: orçamentos, clientes, serviços) pertençam estritamente à mesma organização.
+  - **Proteção do Service Role:** Uso estritamente restrito ao servidor interno. Nunca expor no frontend ou versionamento. Em testes e rotinas comuns de usuários, usar credenciais autenticadas sob RLS.
+  - **Armazenamento e Assíncrono:** Arquivos no Supabase Storage organizados por `organization_id` com políticas RLS de storage; filas, jobs e webhooks sempre carregando e validando o `tenant_id`.
+
+
