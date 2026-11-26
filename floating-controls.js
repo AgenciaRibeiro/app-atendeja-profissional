@@ -31,21 +31,58 @@
     waInitTime.textContent = getCurrentTime();
   }
 
+  // Função para rolagem ao topo suave e desacelerada (não brusca)
+  function smoothScrollToTop(duration) {
+    var startPos = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if (startPos <= 0) return;
+
+    var htmlEl = document.documentElement;
+    var originalBehavior = htmlEl.style.scrollBehavior;
+    // Desativa temporariamente o scroll-behavior nativo para garantir controle total dos frames
+    htmlEl.style.scrollBehavior = "auto";
+
+    // Duração confortável (~950ms) com aceleração e desaceleração suave
+    var totalDuration = duration || 950;
+    var startTime = null;
+
+    // Curva de amortecimento suave (easeInOutCubic)
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var elapsed = timestamp - startTime;
+      var progress = Math.min(elapsed / totalDuration, 1);
+      var easedProgress = easeInOutCubic(progress);
+
+      var newPos = Math.round(startPos * (1 - easedProgress));
+      window.scrollTo(0, newPos);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        htmlEl.style.scrollBehavior = originalBehavior;
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
   // 1. Controle do Botão Voltar ao Topo
   if (btnBackToTop) {
     window.addEventListener("scroll", function () {
-      if (window.scrollY > 300) {
+      var currentY = window.pageYOffset || document.documentElement.scrollTop || 0;
+      if (currentY > 300) {
         btnBackToTop.classList.add("is-visible");
       } else {
         btnBackToTop.classList.remove("is-visible");
       }
     }, { passive: true });
 
-    btnBackToTop.addEventListener("click", function () {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+    btnBackToTop.addEventListener("click", function (e) {
+      e.preventDefault();
+      smoothScrollToTop(950);
     });
   }
 
