@@ -35,6 +35,13 @@ Investigue outro módulo somente quando indispensável à tarefa ativa. Por padr
 ## Evidências
 Nunca alegue testes, auditorias, backups, deploys ou verificações não executados. Use status VALIDADO, NÃO VALIDADO, NÃO EXECUTADO, BLOQUEADO ou FALHOU. Registre commit, arquivos, comandos, resultados e limitações. Não marque concluído apenas por editar código.
 
+## Padrão obrigatório de entrega de relatórios
+Sempre que um agente produzir relatório, auditoria, diagnóstico, análise técnica, documentação de execução ou qualquer outro documento formal:
+- O conteúdo completo deve ser salvo em arquivo dentro da estrutura apropriada do projeto, verificando sua criação e acessibilidade efetivas antes de referenciá-lo.
+- É proibido reproduzir relatórios completos ou tabelas extensas no chat. O chat é exclusivamente o canal de comunicação, síntese e encaminhamento.
+- A mensagem no chat deve conter somente: (1) breve descrição do trabalho realizado; (2) resultado ou situação encontrada; (3) principais pontos que JR precisa conhecer; e (4) link Markdown direto e comprovado para abrir o documento no workspace.
+- Esta regra tem aplicação universal para todos os agentes, etapas, relatórios de testes, auditorias e encerramentos.
+
 ## Ações que exigem autorização específica de JR
 Deploy/publicação em produção; cobranças, estornos ou transações reais; exclusão/alteração destrutiva de dados; reset/recriação de banco; migração destrutiva; rotação/alteração de credenciais; cancelamento de serviços/assinaturas; desativação/alteração de workflows ativos; remoção de volumes/backups; mudanças críticas no Coolify/VPS/DNS/firewall; testes intrusivos em produção.
 

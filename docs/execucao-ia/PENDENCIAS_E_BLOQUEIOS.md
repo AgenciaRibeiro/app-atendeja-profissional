@@ -1,21 +1,18 @@
 # Pendências e bloqueios
 
 ## Bloqueios atuais
-- Confirmar ambiente de teste isolado e estado antes de testes com banco/integrações.
-- Confirmar existência/validade de backup e último teste de restauração.
 - Sem autorização para deploy ou alteração em produção, cobrança real, execução de workflow ativo, migração destrutiva ou alteração de credenciais.
 
 ## Pendências técnicas a revalidar
-- Erro SQL próximo a undefined.
-- Backup PostgreSQL e restauração.
-- Pagamentos, atualização de assinatura e endpoint de status.
-- Método Pix fixado no workflow e suporte efetivo a cartão.
-- Refund/chargeback e idempotência.
-- Segredos, SSRF e logs.
-- Rate limiting e limites por plano.
-- WAHA, ativação e pausa humana.
-- Healthcheck/readiness e persistência.
-- Divergências README, especificação, package.json e preços.
+- Etapa 04 (concluída para avaliação de JR): Ajustes a autorizar no n8n (remover hardcode `metodo = 'pix'`, adicionar chamada HTTP assinada ao backend e corrigir link do WAHA).
+- Refund/chargeback e idempotência (Etapa 05).
+- Segredos, SSRF e logs (Etapa 06).
+- Rate limiting e limites por plano (Etapa 07).
+- WAHA, ativação e pausa humana (Etapa 08).
+- Autenticação, sessão e painel admin (Etapa 09).
+- Healthcheck/readiness e persistência (Etapa 10).
+- Regressão e homologação integrada (Etapa 11).
+- Documentação final e encerramento (Etapa 12).
 
 ## Fora do escopo / futuro
-Registrar descobertas que não sejam necessárias à etapa ativa. Não iniciar implementação nesta missão.
+Registrar descobertas que não sejam necessárias à etapa ativa. Não iniciar implementação fora da etapa aprovada nesta missão.

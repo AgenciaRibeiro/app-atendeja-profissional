@@ -14,6 +14,9 @@
 
 Subtarefas técnicas necessárias podem ocorrer dentro da etapa atual, mas não iniciar a próxima etapa principal antes de fechar a atual.
 
+## Padrão de entrega de relatórios e documentos
+Todo documento formal produzido (relatório de auditoria, execução, diagnóstico técnico, testes, segurança, progresso ou encerramento) deve ser persistido integralmente em arquivo próprio na estrutura do repositório, com confirmação de existência e integridade. É expressamente proibido reproduzir relatórios completos ou tabelas extensas no chat. As respostas no chat devem conter exclusivamente: breve descrição, situação encontrada, destaques que JR precisa conhecer e o link Markdown direto para o arquivo correspondente.
+
 ## Avanço sequencial
 Pode avançar sem pedir confirmação repetida apenas se a próxima etapa já estiver no plano aprovado, pré-requisitos atendidos, sem bloqueios, autorização vigente e sem ação crítica reservada a JR. Caso contrário, pare.
 

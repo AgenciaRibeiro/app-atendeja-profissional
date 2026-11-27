@@ -1,0 +1,294 @@
+{
+  "id": "RN5fo9acYbGIVujC",
+  "name": "AtendeJá — Pix Direto na Chave + Confirmação 1-Clique (WAHA)",
+  "active": false,
+  "isArchived": false,
+  "versionId": "f5398fc7-96c1-4020-aad8-e24323952bcd",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "nodeCount": 8,
+  "createdAt": "2026-11-23T02:47:06.331Z",
+  "updatedAt": "2026-11-23T14:26:08.419Z",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "tags": [],
+  "parentFolderId": "86ccDQYrivxdtcXe",
+  "scopes": [
+    "execution:delete",
+    "execution:list",
+    "execution:read",
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true,
+  "connections": {
+    "Webhook Criar Checkout (Pix Direto)": {
+      "main": [
+        [
+          {
+            "node": "Gerar BR Code Pix + CRC16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar BR Code Pix + CRC16": {
+      "main": [
+        [
+          {
+            "node": "Avisar Fundador via WAHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar Fundador via WAHA": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Checkout Pix)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Confirmar Pix (1 Clique)": {
+      "main": [
+        [
+          {
+            "node": "Preparar Ativação Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Ativação Cliente": {
+      "main": [
+        [
+          {
+            "node": "Ativar Cliente via WAHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ativar Cliente via WAHA": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (HTML Confirmação)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atendeja/criar-checkout",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "={{ $env.ATENDEJA_ALLOWED_ORIGIN || '*' }}"
+        }
+      },
+      "id": "50ae6e9f-d903-48b8-9c65-c16884729dae",
+      "name": "Webhook Criar Checkout (Pix Direto)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        192
+      ],
+      "webhookId": "atendeja-criar-checkout"
+    },
+    {
+      "parameters": {
+        "jsCode": "const PRECOS_OFICIAIS = {\n  essencial: 49.00,\n  pro: 97.00,\n  empresa: 197.00\n};\n\nfunction sanitizeAscii(str, maxLen) {\n  return String(str || '')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-zA-Z0-9 .\\-]/g, '')\n    .trim()\n    .toUpperCase()\n    .slice(0, maxLen);\n}\n\nfunction tlv(id, value) {\n  const valStr = String(value);\n  const len = String(valStr.length).padStart(2, '0');\n  return `${id}${len}${valStr}`;\n}\n\nfunction crc16ccitt(payload) {\n  let crc = 0xFFFF;\n  for (let i = 0; i < payload.length; i++) {\n    crc ^= (payload.charCodeAt(i) << 8);\n    for (let j = 0; j < 8; j++) {\n      if ((crc & 0x8000) !== 0) {\n        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;\n      } else {\n        crc = (crc << 1) & 0xFFFF;\n      }\n    }\n  }\n  return crc.toString(16).toUpperCase().padStart(4, '0');\n}\n\nfunction gerarBrCode({ chave, nome, cidade, valor, txid }) {\n  const gui = tlv('00', 'br.gov.bcb.pix');\n  const keyField = tlv('01', chave);\n  const merchantAccount = tlv('26', gui + keyField);\n  const amount = Number(valor).toFixed(2);\n  const addData = tlv('62', tlv('05', txid));\n\n  const semCrc =\n    tlv('00', '01') +\n    merchantAccount +\n    tlv('52', '0000') +\n    tlv('53', '986') +\n    tlv('54', amount) +\n    tlv('58', 'BR') +\n    tlv('59', nome || '3JR AGENCIA DIGITAL') +\n    tlv('60', cidade || 'JI-PARANA') +\n    addData +\n    '6304';\n\n  return semCrc + crc16ccitt(semCrc);\n}\n\nconst pixChave = String($env.PIX_CHAVE || '').trim();\nconst recebedorNome = sanitizeAscii($env.PIX_RECEBEDOR_NOME || '3JR AGENCIA DIGITAL', 25) || '3JR AGENCIA DIGITAL';\nconst recebedorCidade = sanitizeAscii($env.PIX_RECEBEDOR_CIDADE || 'JI-PARANA', 15) || 'JI-PARANA';\nconst n8nBaseUrl = String($env.N8N_PUBLIC_URL || 'https://n8n.minhaempresaautonoma.online').replace(/\\/+$/, '');\nconst founderRaw = String($env.FOUNDER_WHATSAPP || '5569993768304').replace(/\\D/g, '');\nconst founderChatId = `${founderRaw}@c.us`;\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const raw = item.json || {};\n  const body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\n  const planoKey = String(body.plano || 'pro').trim().toLowerCase();\n  const valorNum = PRECOS_OFICIAIS[planoKey] || PRECOS_OFICIAIS.pro;\n  const valorMensal = Number(valorNum.toFixed(2));\n\n  const empresa = String(body.empresa || 'Cliente AtendeJá').trim();\n  const atendente = String(body.atendente || 'Atendente').trim();\n  const nicho = String(body.nicho || 'geral').trim();\n  const whatsapp = String(body.whatsapp || '').replace(/\\D/g, '');\n  const cidade = String(body.cidade || '').trim();\n  const metodoPagamento = String(body.metodoPagamento || 'PIX').trim().toUpperCase();\n\n  const pedidoId = `ATJ${Date.now().toString().slice(-8)}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;\n  const txid = pedidoId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 25);\n\n  const pixCopiaECola = pixChave\n    ? gerarBrCode({ chave: pixChave, nome: recebedorNome, cidade: recebedorCidade, valor: valorNum, txid })\n    : '';\n\n  const confirmUrl = `${n8nBaseUrl}/webhook/atendeja/confirmar-pix?pedidoId=${encodeURIComponent(pedidoId)}&whatsapp=${encodeURIComponent(whatsapp)}&empresa=${encodeURIComponent(empresa)}&atendente=${encodeURIComponent(atendente)}&nicho=${encodeURIComponent(nicho)}&plano=${encodeURIComponent(planoKey)}`;\n\n  const msgFundador = `💳 *Novo Pedido Pix — AtendeJá*\\nPedido: ${pedidoId}\\nEmpresa: ${empresa} (${nicho})\\nAtendente: ${atendente}\\nPlano: ${planoKey.toUpperCase()} — R$ ${valorNum.toFixed(2)}\\nWhatsApp: ${whatsapp || 'não informado'}\\n\\n✅ Após conferir o Pix, confirme em 1 clique:\\n${confirmUrl}`;\n\n  results.push({\n    json: {\n      ok: Boolean(pixChave),\n      erro: pixChave ? null : 'Variável $env.PIX_CHAVE não configurada no n8n.',\n      pedidoId,\n      plano: planoKey,\n      valorMensal,\n      pixCopiaECola,\n      status: 'aguardando_pagamento',\n      empresa,\n      atendente,\n      nicho,\n      whatsapp,\n      cidade,\n      metodoPagamento,\n      confirmUrl,\n      founderChatId,\n      msgFundador\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "00075fdb-8d8a-4406-9150-e3a86585b938",
+      "name": "Gerar BR Code Pix + CRC16",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.WAHA_BASE_URL || 'https://waha.minhaempresaautonoma.online').replace(/\\/+$/, '') }}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $env.WAHA_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ session: $env.WAHA_SESSION || 'default', chatId: $json.founderChatId, text: $json.msgFundador }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "c89f74cb-ddb0-4a3d-845a-2db8deb55de8",
+      "name": "Avisar Fundador via WAHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        192
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: $('Gerar BR Code Pix + CRC16').item.json.ok, pedidoId: $('Gerar BR Code Pix + CRC16').item.json.pedidoId, valorMensal: $('Gerar BR Code Pix + CRC16').item.json.valorMensal, pixCopiaECola: $('Gerar BR Code Pix + CRC16').item.json.pixCopiaECola, status: $('Gerar BR Code Pix + CRC16').item.json.status, erro: $('Gerar BR Code Pix + CRC16').item.json.erro }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b2cfaa65-0e6f-4811-8de4-c68a9a0bfd3e",
+      "name": "Respond to Webhook (Checkout Pix)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "path": "atendeja/confirmar-pix",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d0a9a679-ff14-433d-a83e-d5fd4c2949c3",
+      "name": "Webhook Confirmar Pix (1 Clique)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        496
+      ],
+      "webhookId": "atendeja-confirmar-pix"
+    },
+    {
+      "parameters": {
+        "jsCode": "const appBaseUrl = String($env.ATENDEJA_APP_URL || 'https://atendeja.3jr.com.br').replace(/\\/+$/, '');\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const raw = item.json || {};\n  const q = raw.query && typeof raw.query === 'object' ? raw.query : raw;\n\n  const pedidoId = String(q.pedidoId || '').trim();\n  const empresa = String(q.empresa || 'Sua Empresa').trim();\n  const atendente = String(q.atendente || 'Equipe').trim();\n  const nicho = String(q.nicho || 'geral').trim();\n  const plano = String(q.plano || 'pro').trim();\n\n  let digits = String(q.whatsapp || '').replace(/\\D/g, '');\n  if (digits && !digits.startsWith('55') && (digits.length === 10 || digits.length === 11)) {\n    digits = `55${digits}`;\n  }\n  const clienteChatId = digits ? `${digits}@c.us` : '';\n\n  const linkAtendeJa = `${appBaseUrl}/?atendente=${encodeURIComponent(atendente)}&empresa=${encodeURIComponent(empresa)}&nicho=${encodeURIComponent(nicho)}`;\n  const msgCliente = `Olá, ${atendente}! 🎉 Seu pagamento Pix (${pedidoId}) do *AtendeJá* (Plano ${plano.toUpperCase()}) para *${empresa}* foi confirmado!\\n\\nSeu acesso já está ativo:\\n${linkAtendeJa}\\n\\nConte com a 3 J R Agência Digital!`;\n\n  const escapeHtml = (s) => String(s)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n\n  const htmlConfirmacao = `<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Pix Confirmado — AtendeJá</title><style>body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px}.card{background:#1e293b;border:1px solid #334155;border-radius:16px;max-width:480px;width:100%;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,.4)}h1{margin:0 0 12px;font-size:22px;color:#4ade80}p{margin:8px 0;color:#cbd5e1;line-height:1.5}.tag{display:inline-block;background:#064e3b;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:16px}code{background:#0f172a;padding:2px 6px;border-radius:6px;color:#fbbf24}</style></head><body><div class=\"card\"><span class=\"tag\">Pagamento Confirmado</span><h1>Conta AtendeJá Ativada!</h1><p><strong>Pedido:</strong> <code>${escapeHtml(pedidoId || 'N/A')}</code></p><p><strong>Empresa:</strong> ${escapeHtml(empresa)} (${escapeHtml(nicho)})</p><p><strong>Plano:</strong> ${escapeHtml(plano.toUpperCase())}</p><p><strong>WhatsApp notificado:</strong> ${escapeHtml(digits || 'Não informado')}</p><p style=\"margin-top:16px;font-size:14px;color:#94a3b8\">O cliente recebeu a mensagem de boas-vindas com o link de acesso via WAHA.</p></div></body></html>`;\n\n  results.push({\n    json: {\n      pedidoId,\n      empresa,\n      atendente,\n      nicho,\n      plano,\n      whatsappDigits: digits,\n      clienteChatId,\n      linkAtendeJa,\n      msgCliente,\n      htmlConfirmacao\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "b2f02d25-fbf7-44b0-bcaf-47ee8faa3901",
+      "name": "Preparar Ativação Cliente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.WAHA_BASE_URL || 'https://waha.minhaempresaautonoma.online').replace(/\\/+$/, '') }}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $env.WAHA_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ session: $env.WAHA_SESSION || 'default', chatId: $json.clienteChatId, text: $json.msgCliente }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "c4582700-9b84-4dee-a740-ac00d0d18758",
+      "name": "Ativar Cliente via WAHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        496
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Preparar Ativação Cliente').item.json.htmlConfirmacao }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "baa2116c-2536-4e0b-b8ce-0bc59a019aef",
+      "name": "Respond to Webhook (HTML Confirmação)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        496
+      ]
+    }
+  ],
+  "nodeGroups": [],
+  "activeVersion": null,
+  "meta": null
+}

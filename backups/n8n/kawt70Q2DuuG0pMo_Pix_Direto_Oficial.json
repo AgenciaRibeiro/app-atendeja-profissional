@@ -1,0 +1,10 @@
+{
+  "id": "kawt70Q2DuuG0pMo",
+  "name": "AtendeJá — Mercado Pago (Pix Direto + Confirmação Automática + WAHA)",
+  "active": true,
+  "triggerCount": 2,
+  "nodeCount": 9,
+  "updatedAt": "2026-11-27T02:23:40.119Z",
+  "parentFolderId": "86ccDQYrivxdtcXe",
+  "notes": "Workflow 100% Pix Direto com ativacao WAHA no link oficial AtendeJa"
+}
