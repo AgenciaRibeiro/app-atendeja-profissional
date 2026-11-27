@@ -1228,7 +1228,86 @@ async function handleClient(req, res, parts) {
     throw fail(404, "Ação de WhatsApp não encontrada");
   }
 
-  if (parts.slice(2).join("/") !== "profile" || !["GET", "POST", "PATCH"].includes(req.method)) {
+  const clientRoute = parts.slice(2).join("/");
+
+  if (clientRoute === "change-google-account" && req.method === "POST") {
+    requireServerConfig(false);
+    const { user } = await authenticate(req);
+    const body = await readBody(req);
+    const newEmail = String(body.new_email || "").trim().toLowerCase();
+
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      throw fail(400, "Informe um endereço de e-mail Google válido.");
+    }
+
+    const query = new URLSearchParams({
+      select: "id,auth_user_id,email_google,company_name",
+      auth_user_id: "eq." + user.id,
+      limit: "1"
+    });
+    const rows = await supabaseRest("clients?" + query.toString());
+    if (!Array.isArray(rows) || !rows.length) {
+      throw fail(404, "Perfil do contratante não encontrado.");
+    }
+    const currentClient = rows[0];
+
+    if (newEmail === String(currentClient.email_google || "").toLowerCase()) {
+      throw fail(400, "O novo e-mail Google deve ser diferente do e-mail atualmente vinculado.");
+    }
+
+    const existingRows = await supabaseRest("clients?" + new URLSearchParams({
+      select: "id,email_google",
+      email_google: "ilike." + newEmail,
+      limit: "1"
+    }).toString());
+    if (Array.isArray(existingRows) && existingRows.length) {
+      throw fail(409, "Este e-mail Google já está vinculado a outro cadastro no sistema.");
+    }
+
+    // 1. Transfere a titularidade e desvincula a conta antiga
+    await supabaseRest("clients?id=eq." + currentClient.id, {
+      method: "PATCH",
+      body: {
+        email_google: newEmail,
+        auth_user_id: null,
+        updated_at: new Date().toISOString()
+      }
+    });
+
+    // 2. Registro em auditoria administrativa
+    await supabaseRest("admin_audit_logs", {
+      method: "POST",
+      body: {
+        client_id: currentClient.id,
+        actor: user.email || currentClient.email_google,
+        action: "CHANGE_GOOGLE_ACCOUNT",
+        details: {
+          previous_email: currentClient.email_google,
+          new_email: newEmail,
+          old_auth_user_id: user.id
+        }
+      }
+    }).catch(() => {});
+
+    // 3. Exclui a conta Google antiga no Supabase Auth para revogação permanente
+    try {
+      await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+        method: "DELETE",
+        headers: {
+          "apikey": SUPABASE_SECRET_KEY,
+          "Authorization": "Bearer " + SUPABASE_SECRET_KEY
+        }
+      });
+    } catch (_delErr) {}
+
+    return send(res, 200, {
+      ok: true,
+      new_email: newEmail,
+      message: `Conta Google alterada com sucesso para ${newEmail}. O acesso anterior foi completamente revogado e excluído do sistema. Conecte-se agora com a nova conta Google.`
+    });
+  }
+
+  if (clientRoute !== "profile" || !["GET", "POST", "PATCH"].includes(req.method)) {
     throw fail(404, "Rota de contratante não encontrada");
   }
   const { user, token } = await authenticate(req);

@@ -1,10 +1,10 @@
 # Estado atual da missão
 
 Missão: auditoria corretiva e estabilização do AtendeJá Profissional.  
-Status: ATIVA — Etapas 00, 01, 02, 03, 04, 05, 06, 07 e 08 concluídas.  
-Etapa atual: 08 — WhatsApp/WAHA e automações (Concluída e validada).  
-Última etapa corretiva concluída: 08 — WhatsApp/WAHA e automações (validada com isolamento multi-tenant e conexão WAHA em 2026-11-27).  
-Próxima etapa: 09 — Autenticação, sessão e painel admin.
+Status: ATIVA — Etapas 00, 01, 02, 03, 04, 05, 06, 07, 08 e 09 concluídas.  
+Etapa atual: 09 — Autenticação, sessão e painel admin (CONCLUÍDA).  
+Última etapa corretiva concluída: 09 — Autenticação, sessão e painel admin (validada com troca segura e exclusão de conta Google, recuperação de senha com verificação em banco e isolamento de rotas em 2026-11-27).  
+Próxima etapa: 10 — Healthchecks, observabilidade e persistência.
 
 ## Escopo congelado
 Corrigir e validar problemas existentes conforme o plano mestre. Não redesenhar dashboard/landing nem criar funcionalidades.

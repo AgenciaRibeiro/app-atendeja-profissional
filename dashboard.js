@@ -1689,6 +1689,73 @@
     fillProfileForm();
     renderBranding();
   });
+
+  // Modal Alterar Conta Google
+  var changeGoogleModal = $("change-google-modal");
+  function closeChangeGoogleModal() {
+    if (changeGoogleModal) changeGoogleModal.hidden = true;
+    $("new-google-email").value = "";
+    $("confirm-new-google-email").value = "";
+    $("change-google-feedback").textContent = "";
+    $("change-google-feedback").className = "save-feedback";
+  }
+  if ($("btn-open-change-google")) {
+    $("btn-open-change-google").addEventListener("click", function () {
+      if (changeGoogleModal) changeGoogleModal.hidden = false;
+      $("new-google-email").focus();
+    });
+  }
+  if ($("btn-close-change-google")) $("btn-close-change-google").addEventListener("click", closeChangeGoogleModal);
+  if ($("btn-cancel-change-google")) $("btn-cancel-change-google").addEventListener("click", closeChangeGoogleModal);
+
+  var changeGoogleForm = $("change-google-form");
+  if (changeGoogleForm) {
+    changeGoogleForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var feedback = $("change-google-feedback");
+      var btnSubmit = $("btn-submit-change-google");
+      var newEmail = $("new-google-email").value.trim().toLowerCase();
+      var confirmEmail = $("confirm-new-google-email").value.trim().toLowerCase();
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        feedback.textContent = "Informe um e-mail Google válido.";
+        feedback.className = "save-feedback is-err";
+        $("new-google-email").focus();
+        return;
+      }
+      if (newEmail !== confirmEmail) {
+        feedback.textContent = "Os e-mails informados não coincidem.";
+        feedback.className = "save-feedback is-err";
+        $("confirm-new-google-email").focus();
+        return;
+      }
+      if (newEmail === (tenant.emailGoogle || "").toLowerCase()) {
+        feedback.textContent = "O novo e-mail deve ser diferente do e-mail atual.";
+        feedback.className = "save-feedback is-err";
+        return;
+      }
+
+      feedback.textContent = "Transferindo titularidade e revogando acesso anterior…";
+      feedback.className = "save-feedback";
+      btnSubmit.disabled = true;
+
+      try {
+        if (!window.ATENDEJA_AUTH || !window.ATENDEJA_AUTH.changeGoogleAccount) {
+          throw new Error("Módulo de autenticação não inicializado.");
+        }
+        await window.ATENDEJA_AUTH.changeGoogleAccount(newEmail);
+        feedback.textContent = "✓ Conta transferida com sucesso! Redirecionando…";
+        feedback.className = "save-feedback is-ok";
+        setTimeout(function () {
+          closeChangeGoogleModal();
+        }, 2000);
+      } catch (err) {
+        feedback.textContent = err.message || "Erro ao transferir conta Google.";
+        feedback.className = "save-feedback is-err";
+        btnSubmit.disabled = false;
+      }
+    });
+  }
   $("profile-logo-file").addEventListener("change", function () {
     var file = this.files && this.files[0];
     if (!file || !/^image\//.test(file.type)) return;

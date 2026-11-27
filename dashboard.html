@@ -604,8 +604,14 @@
                 <input type="tel" id="pf-whatsapp" maxlength="20" required>
               </div>
               <div class="field-group">
-                <label for="pf-email">E-mail Google (login) *</label>
-                <input type="email" id="pf-email" maxlength="120" required>
+                <label for="pf-email">Conta Google Vinculada (Login) 🔒</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="email" id="pf-email" maxlength="120" readonly style="background:rgba(255,255,255,0.04);cursor:not-allowed;" title="Login exclusivo via Google">
+                  <button type="button" class="btn-mini" id="btn-open-change-google" style="white-space:nowrap;padding:7px 10px;font-size:12px;">Alterar Conta</button>
+                </div>
+                <small style="color:var(--muted,#9ba7b4);font-size:11.5px;margin-top:4px;display:block;">
+                  Login exclusivo via Google. Para trocar a conta vinculada, clique em Alterar Conta.
+                </small>
               </div>
             </div>
 
@@ -864,6 +870,37 @@
           <button type="button" class="btn-mini is-wa" id="btn-apply-preview-plan">Aplicar preview</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL ALTERAR CONTA GOOGLE ================= -->
+  <div id="change-google-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="change-google-title" style="max-width:480px;">
+      <div class="modal-head">
+        <h2 id="change-google-title">Alterar Conta Google</h2>
+        <button type="button" id="btn-close-change-google" class="btn-mini">Fechar</button>
+      </div>
+      <form id="change-google-form" style="padding:16px 20px;">
+        <p style="color:var(--text);font-size:13.5px;line-height:1.5;margin-bottom:12px;">
+          Ao transferir sua assinatura para uma nova conta Google, <strong>a sua conta atual será desconectada e permanentemente excluída do sistema</strong> para sua segurança.
+        </p>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:12px;margin-bottom:16px;color:#fca5a5;font-size:12.5px;line-height:1.4;">
+          ⚠️ <strong>Atenção:</strong> Certifique-se de informar uma conta Google à qual você tem acesso. O login anterior deixará de funcionar imediatamente.
+        </div>
+        <div class="field-group" style="margin-bottom:14px;">
+          <label for="new-google-email" style="display:block;margin-bottom:6px;font-size:12.5px;font-weight:600;">Novo E-mail Google *</label>
+          <input type="email" id="new-google-email" placeholder="seu-novo-email@gmail.com" required style="width:100%;padding:10px 12px;border-radius:8px;background:#11141a;border:1px solid #222a35;color:#fff;">
+        </div>
+        <div class="field-group" style="margin-bottom:18px;">
+          <label for="confirm-new-google-email" style="display:block;margin-bottom:6px;font-size:12.5px;font-weight:600;">Confirme o Novo E-mail Google *</label>
+          <input type="email" id="confirm-new-google-email" placeholder="Repita o novo e-mail Google" required style="width:100%;padding:10px 12px;border-radius:8px;background:#11141a;border:1px solid #222a35;color:#fff;">
+        </div>
+        <p id="change-google-feedback" class="save-feedback" style="margin-bottom:12px;"></p>
+        <div class="modal-foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+          <button type="button" class="btn-outline" id="btn-cancel-change-google">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-submit-change-google" style="background:#ef4444;border-color:#ef4444;">Transferir e Revogar Acesso Antigo</button>
+        </div>
+      </form>
     </div>
   </div>
 

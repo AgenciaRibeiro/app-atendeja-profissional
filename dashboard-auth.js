@@ -143,6 +143,33 @@
       try { result = await response.json(); } catch (_e) {}
       if (!response.ok) throw new Error(result.error || "Não foi possível salvar o perfil na nuvem.");
       saveProfile(result.profile);
+    },
+    async changeGoogleAccount(newEmail) {
+      if (!enabled || !client) throw new Error("Supabase não está configurado.");
+      var current = await client.auth.getSession();
+      var session = current.data && current.data.session;
+      if (!session) throw new Error("Sessão expirada. Faça login novamente antes de alterar a conta.");
+      var response = await fetch("/api/client/change-google-account", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + session.access_token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ new_email: newEmail }),
+        cache: "no-store"
+      });
+      var result = {};
+      try { result = await response.json(); } catch (_e) {}
+      if (!response.ok) throw new Error(result.error || "Não foi possível alterar a conta Google.");
+      try {
+        await client.auth.signOut();
+        localStorage.removeItem(AUTH_KEY);
+        localStorage.removeItem("atendeja_session_active");
+        localStorage.removeItem("atendeja_tenant_v1");
+      } catch (_e) {}
+      setGate(false);
+      setMessage("Conta Google alterada para " + newEmail + ". Sua conta anterior foi revogada e excluída. Conecte-se com sua nova conta Google.", false);
+      return result;
     }
   };
   document.addEventListener("DOMContentLoaded", initialize);

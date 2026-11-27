@@ -13,7 +13,7 @@ Não reordenar sem justificativa documentada e decisão de JR.
 | 06 | Segredos, SSRF e hardening | CONCLUÍDA |
 | 07 | Limites por plano e rate limit | CONCLUÍDA |
 | 08 | WhatsApp/WAHA e automações | CONCLUÍDA |
-| 09 | Autenticação, sessão e painel admin | AGUARDANDO |
+| 09 | Autenticação, sessão e painel admin | CONCLUÍDA |
 | 10 | Healthchecks, observabilidade e persistência | AGUARDANDO |
 | 11 | Regressão e homologação integrada | AGUARDANDO |
 | 12 | Documentação final e encerramento | AGUARDANDO |
