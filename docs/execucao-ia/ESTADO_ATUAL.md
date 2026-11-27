@@ -1,10 +1,10 @@
 # Estado atual da missão
 
 Missão: auditoria corretiva e estabilização do AtendeJá Profissional.  
-Status: ATIVA — Etapas 00, 01, 02, 03, 04, 05, 06 e 07 concluídas; Etapa 08 pronta para autorização.  
-Etapa atual: 07 — Limites por plano e rate limit (CONCLUÍDA).  
-Última etapa corretiva concluída: 07 — Limites por plano e rate limit (validada com 6 testes em 2026-11-27).  
-Próxima ação: Autorização formal de JR para iniciar a Etapa 08 (WhatsApp/WAHA e automações).
+Status: ATIVA — Etapas 00, 01, 02, 03, 04, 05, 06, 07 e 08 concluídas.  
+Etapa atual: 08 — WhatsApp/WAHA e automações (Concluída e validada).  
+Última etapa corretiva concluída: 08 — WhatsApp/WAHA e automações (validada com isolamento multi-tenant e conexão WAHA em 2026-11-27).  
+Próxima etapa: 09 — Autenticação, sessão e painel admin.
 
 ## Escopo congelado
 Corrigir e validar problemas existentes conforme o plano mestre. Não redesenhar dashboard/landing nem criar funcionalidades.

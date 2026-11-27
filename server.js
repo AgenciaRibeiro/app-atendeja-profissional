@@ -34,6 +34,25 @@ const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPAB
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const BOOTSTRAP_TOKEN = process.env.FOUNDER_BOOTSTRAP_TOKEN || "";
 const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || "";
+const WAHA_BASE_URL = (process.env.WAHA_BASE_URL || "https://waha.minhaempresaautonoma.online").replace(/\/$/, "");
+const WAHA_API_KEY = process.env.WAHA_API_KEY || "ca282a8e0b79f1b358169fe0b4fbb0c43bbac78d";
+
+async function wahaFetch(path, options = {}) {
+  const url = `${WAHA_BASE_URL}${path}`;
+  const headers = Object.assign({
+    "X-Api-Key": WAHA_API_KEY
+  }, options.headers || {});
+  let body = options.body;
+  if (body && typeof body === "object" && !(body instanceof Buffer)) {
+    body = JSON.stringify(body);
+    headers["Content-Type"] = "application/json";
+  }
+  return fetch(url, Object.assign({}, options, { body, headers, signal: AbortSignal.timeout(15000) }));
+}
+
+function getClientSessionName(clientId) {
+  return "session_" + String(clientId).replace(/[^a-z0-9]/gi, "").slice(0, 16);
+}
 const CORS_ORIGINS = new Set(String(process.env.CORS_ORIGIN || "").split(",").map(x => x.trim()).filter(Boolean));
 const STATUS_VALUES = new Set(["trial", "active", "past_due", "canceled", "suspended"]);
 const PLAN_CODE = /^[a-z0-9_-]{1,40}$/;
@@ -1027,6 +1046,79 @@ async function handleAdmin(req, res, url, parts) {
 }
 
 async function handleClient(req, res, parts) {
+  if (parts[2] === "whatsapp") {
+    const { user } = await authenticate(req);
+    const client = await getClient(user);
+    const sessionName = getClientSessionName(client.id);
+    const subRoute = parts[3] || "status";
+
+    if (subRoute === "status" && req.method === "GET") {
+      try {
+        const wahaRes = await wahaFetch("/api/sessions/" + sessionName);
+        if (wahaRes.status === 404) {
+          return send(res, 200, { ok: true, status: "DISCONNECTED", connected: false });
+        }
+        const sessionData = await wahaRes.json().catch(() => ({}));
+        const status = sessionData.status || "DISCONNECTED";
+        const isConnected = status === "WORKING";
+        const rawPhone = sessionData.me?.id ? String(sessionData.me.id).replace(/[^0-9]/g, "") : "";
+        return send(res, 200, {
+          ok: true,
+          status,
+          connected: isConnected,
+          phone: rawPhone,
+          pushName: sessionData.me?.pushName || ""
+        });
+      } catch (err) {
+        return send(res, 200, { ok: true, status: "DISCONNECTED", connected: false, error: err.message });
+      }
+    }
+
+    if (subRoute === "connect" && req.method === "POST") {
+      try {
+        const checkRes = await wahaFetch("/api/sessions/" + sessionName);
+        if (checkRes.status === 404) {
+          await wahaFetch("/api/sessions", {
+            method: "POST",
+            body: { name: sessionName }
+          });
+        }
+        await wahaFetch("/api/sessions/" + sessionName + "/start", { method: "POST" });
+        return send(res, 200, { ok: true, status: "STARTING", message: "Sessão iniciada; aguardando QR Code" });
+      } catch (err) {
+        throw fail(502, "Não foi possível iniciar o WhatsApp no servidor: " + err.message);
+      }
+    }
+
+    if (subRoute === "qr" && req.method === "GET") {
+      try {
+        const qrRes = await wahaFetch("/api/" + sessionName + "/auth/qr", {
+          headers: { Accept: "image/png" }
+        });
+        if (qrRes.status === 200) {
+          const buffer = await qrRes.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString("base64");
+          return send(res, 200, { ok: true, qrDataUrl: "data:image/png;base64," + base64 });
+        }
+        return send(res, 200, { ok: false, status: "WAITING_QR", message: "QR Code sendo gerado. Aguarde alguns segundos." });
+      } catch (err) {
+        throw fail(502, "Erro ao obter QR Code do WhatsApp: " + err.message);
+      }
+    }
+
+    if (subRoute === "disconnect" && req.method === "POST") {
+      try {
+        await wahaFetch("/api/sessions/" + sessionName + "/logout", { method: "POST" }).catch(() => {});
+        await wahaFetch("/api/sessions/" + sessionName + "/stop", { method: "POST" }).catch(() => {});
+        return send(res, 200, { ok: true, status: "DISCONNECTED", disconnected: true });
+      } catch (err) {
+        throw fail(502, "Erro ao desconectar WhatsApp: " + err.message);
+      }
+    }
+
+    throw fail(404, "Ação de WhatsApp não encontrada");
+  }
+
   if (parts.slice(2).join("/") !== "profile" || !["GET", "POST", "PATCH"].includes(req.method)) {
     throw fail(404, "Rota de contratante não encontrada");
   }

@@ -12,7 +12,7 @@ Não reordenar sem justificativa documentada e decisão de JR.
 | 05 | Reembolso, chargeback e estados de assinatura | CONCLUÍDA |
 | 06 | Segredos, SSRF e hardening | CONCLUÍDA |
 | 07 | Limites por plano e rate limit | CONCLUÍDA |
-| 08 | WhatsApp/WAHA e automações | AGUARDANDO |
+| 08 | WhatsApp/WAHA e automações | CONCLUÍDA |
 | 09 | Autenticação, sessão e painel admin | AGUARDANDO |
 | 10 | Healthchecks, observabilidade e persistência | AGUARDANDO |
 | 11 | Regressão e homologação integrada | AGUARDANDO |

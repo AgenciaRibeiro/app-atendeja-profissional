@@ -1378,7 +1378,164 @@
     return "••••••••" + v.slice(-4);
   }
 
+  /* ================= CONEXÃO FACILITADA WHATSAPP (QR CODE) ================= */
+  var waPollTimer = null;
+
+  async function getClientAuthToken() {
+    if (window.supabase) {
+      try {
+        var sess = await window.supabase.auth.getSession();
+        if (sess && sess.data && sess.data.session) return sess.data.session.access_token;
+      } catch (_e) {}
+    }
+    return "";
+  }
+
+  function setWaUIState(state, info) {
+    var discEl = $("wa-state-disconnected");
+    var qrEl = $("wa-state-qr");
+    var connEl = $("wa-state-connected");
+    var statusEl = $("wa-card-status");
+
+    if (discEl) discEl.hidden = state !== "disconnected";
+    if (qrEl) qrEl.hidden = state !== "qr";
+    if (connEl) connEl.hidden = state !== "connected";
+
+    if (statusEl) {
+      if (state === "connected") {
+        statusEl.textContent = "Conectado";
+        statusEl.className = "conn-status is-ok";
+      } else if (state === "qr") {
+        statusEl.textContent = "Aguardando leitura";
+        statusEl.className = "conn-status";
+      } else {
+        statusEl.textContent = "Desconectado";
+        statusEl.className = "conn-status";
+      }
+    }
+
+    if (state === "connected" && info && info.phone) {
+      var phoneEl = $("wa-connected-phone");
+      if (phoneEl) {
+        var p = String(info.phone);
+        var fmt = p.length >= 12 ? "+" + p.slice(0, 2) + " (" + p.slice(2, 4) + ") " + p.slice(4, 9) + "-" + p.slice(9) : p;
+        phoneEl.textContent = fmt + (info.pushName ? " (" + info.pushName + ")" : "");
+      }
+    }
+  }
+
+  async function fetchWaQrCode() {
+    var token = await getClientAuthToken();
+    if (!token) return;
+    try {
+      var res = await fetch("/api/client/whatsapp/qr", {
+        headers: { Authorization: "Bearer " + token },
+        cache: "no-store"
+      });
+      var data = await res.json();
+      var qrImg = $("wa-qr-img");
+      var qrLoading = $("wa-qr-loading");
+      if (data.ok && data.qrDataUrl) {
+        if (qrImg) {
+          qrImg.src = data.qrDataUrl;
+          qrImg.style.display = "block";
+        }
+        if (qrLoading) qrLoading.style.display = "none";
+      }
+    } catch (_e) {}
+  }
+
+  async function pollWaStatus() {
+    var token = await getClientAuthToken();
+    if (!token) return;
+    try {
+      var res = await fetch("/api/client/whatsapp/status", {
+        headers: { Authorization: "Bearer " + token },
+        cache: "no-store"
+      });
+      var data = await res.json();
+      if (data && data.ok) {
+        if (data.connected && data.status === "WORKING") {
+          setWaUIState("connected", { phone: data.phone, pushName: data.pushName });
+          if (waPollTimer) { clearInterval(waPollTimer); waPollTimer = null; }
+        } else if (data.status === "SCAN_QR_CODE") {
+          setWaUIState("qr");
+          fetchWaQrCode();
+        } else if (data.status === "STARTING") {
+          setWaUIState("qr");
+        } else {
+          setWaUIState("disconnected");
+        }
+      }
+    } catch (_e) {}
+  }
+
+  async function startWaConnect() {
+    var token = await getClientAuthToken();
+    if (!token) {
+      showToast("Entre no painel com sua conta para conectar o WhatsApp.");
+      return;
+    }
+    setWaUIState("qr");
+    var qrImg = $("wa-qr-img");
+    var qrLoading = $("wa-qr-loading");
+    if (qrImg) qrImg.style.display = "none";
+    if (qrLoading) qrLoading.style.display = "flex";
+
+    try {
+      var res = await fetch("/api/client/whatsapp/connect", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token }
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Falha ao iniciar WhatsApp");
+      
+      if (waPollTimer) clearInterval(waPollTimer);
+      waPollTimer = setInterval(pollWaStatus, 3000);
+      pollWaStatus();
+      showToast("Iniciando WhatsApp... O QR Code aparecerá em instantes.");
+    } catch (err) {
+      setWaUIState("disconnected");
+      showToast("Erro: " + err.message);
+    }
+  }
+
+  async function disconnectWa() {
+    var token = await getClientAuthToken();
+    if (!token) return;
+    if (waPollTimer) { clearInterval(waPollTimer); waPollTimer = null; }
+    try {
+      await fetch("/api/client/whatsapp/disconnect", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token }
+      });
+      setWaUIState("disconnected");
+      showToast("WhatsApp desconectado.");
+    } catch (err) {
+      showToast("Erro ao desconectar: " + err.message);
+    }
+  }
+
+  function initWhatsAppCard() {
+    var btnConnect = $("btn-wa-start-connect");
+    var btnCancel = $("btn-wa-cancel-connect");
+    var btnRefresh = $("btn-wa-refresh-qr");
+    var btnDisconnect = $("btn-wa-disconnect");
+
+    if (btnConnect) btnConnect.addEventListener("click", startWaConnect);
+    if (btnCancel) btnCancel.addEventListener("click", function () {
+      if (waPollTimer) { clearInterval(waPollTimer); waPollTimer = null; }
+      setWaUIState("disconnected");
+    });
+    if (btnRefresh) btnRefresh.addEventListener("click", function () {
+      fetchWaQrCode();
+      showToast("Atualizando QR Code...");
+    });
+    if (btnDisconnect) btnDisconnect.addEventListener("click", disconnectWa);
+  }
+
   function renderConnections() {
+    pollWaStatus();
     $("cn-wa-provider").value = connections.whatsapp.provider || "WAHA (Self-Hosted)";
     $("cn-wa-url").value = connections.whatsapp.url || "";
     $("cn-wa-session").value = connections.whatsapp.session || "default";
@@ -1644,6 +1801,7 @@
   });
 
   /* ================= INIT ================= */
+  initWhatsAppCard();
   renderBranding();
   updateSidebarCounts();
   applySessionState();
