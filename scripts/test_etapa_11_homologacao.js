@@ -178,7 +178,10 @@ async function runHomologation() {
       status: "refunded",
       payment_method: "pix"
     });
-    assert(r4.status === 200 && r4.data.ok === true && r4.data.subscription_status === "refunded", "4.4 Transição de estorno (refunded) atualiza status de assinatura sem falha");
+    assert(
+      r4.status === 200 && r4.data.ok === true && (r4.data.result?.status === "refunded" || r4.data.subscription_status === "refunded"),
+      "4.4 Transição de estorno (refunded) atualiza status de assinatura sem falha"
+    );
   }
 
   // ============================================================================

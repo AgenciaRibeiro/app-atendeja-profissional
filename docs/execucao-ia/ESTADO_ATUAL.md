@@ -1,10 +1,10 @@
 # Estado atual da missão
 
 Missão: auditoria corretiva e estabilização do AtendeJá Profissional.  
-Status: ATIVA — Etapas 00 a 10 concluídas.  
-Etapa atual: 10 — Healthchecks, observabilidade e persistência (CONCLUÍDA).  
-Última etapa corretiva concluída: 10 — Healthchecks, observabilidade e persistência (validada com liveness, readiness com probe postgres e métricas de memória em produção em 2026-11-27).  
-Próxima etapa: 11 — Regressão e homologação integrada.
+Status: ATIVA — Etapas 00 a 11 concluídas.  
+Etapa atual: 11 — Regressão e homologação integrada (CONCLUÍDA).  
+Última etapa corretiva concluída: 11 — Regressão e homologação integrada (23 testes automatizados aprovados com 100% de sucesso cobrindo rotas, segurança, pagamentos, banco e gateways WhatsApp em 2026-11-27).  
+Próxima etapa: 12 — Documentação final e encerramento.
 
 ## Escopo congelado
 Corrigir e validar problemas existentes conforme o plano mestre. Não redesenhar dashboard/landing nem criar funcionalidades.
