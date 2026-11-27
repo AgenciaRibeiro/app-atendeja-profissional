@@ -16,6 +16,6 @@ Não reordenar sem justificativa documentada e decisão de JR.
 | 09 | Autenticação, sessão e painel admin | CONCLUÍDA |
 | 10 | Healthchecks, observabilidade e persistência | CONCLUÍDA |
 | 11 | Regressão e homologação integrada | CONCLUÍDA |
-| 12 | Documentação final e encerramento | AGUARDANDO |
+| 12 | Documentação final e encerramento | CONCLUÍDA |
 
-Estados: AGUARDANDO, EM_ANDAMENTO, AGUARDANDO_JR, BLOQUEADA, CONCLUÍDA, DISPENSADA_POR_JR. Só avançar quando etapa anterior concluída ou formalmente dispensada. Não encerrar missão com etapa obrigatória pendente.
+**Status da Missão:** CONCLUÍDA (Fila CONGELADA — Todas as 13 etapas de 00 a 12 concluídas e homologadas com sucesso em 2026-11-27). Novas funcionalidades ou demandas de produto devem ser abertas em uma nova missão formal.
