@@ -78,6 +78,8 @@
 
     if (show) {
       window.history.replaceState(null, "", "/gerenciar-atendeja");
+    } else {
+      window.history.replaceState(null, "", "/atendeja");
     }
   }
 

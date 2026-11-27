@@ -1721,11 +1721,51 @@
   });
 
   /* ================= SESSÃO, TECLADO & PWA ================= */
+  function getClientSlug() {
+    var path = window.location.pathname;
+    var match = path.match(/^\/(?:login|gerenciar)-([a-z0-9_-]+)/i);
+    if (match) {
+      try { sessionStorage.setItem("atendeja:client_slug", match[1].toLowerCase()); } catch (_e) {}
+      return match[1].toLowerCase();
+    }
+    var stored = "";
+    try { stored = sessionStorage.getItem("atendeja:client_slug"); } catch (_e) {}
+    if (stored) return stored;
+    if (tenant && tenant.empresa) {
+      var slug = tenant.empresa.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (slug) {
+        try { sessionStorage.setItem("atendeja:client_slug", slug); } catch (_e) {}
+        return slug;
+      }
+    }
+    return "cliente";
+  }
+
+  function formatSlugName(slug) {
+    if (!slug || slug === "cliente") return "AtendeJá";
+    return slug.charAt(0).toUpperCase() + slug.slice(1);
+  }
+
   function applySessionState() {
     var loggedOut = false;
     try { loggedOut = localStorage.getItem(KEYS.SESSION) === "false"; } catch (_e) {}
     $("app-layout").hidden = loggedOut;
     $("auth-gate").hidden = !loggedOut;
+
+    var slug = getClientSlug();
+    var displayName = (tenant && tenant.empresa) ? tenant.empresa : formatSlugName(slug);
+
+    if (loggedOut) {
+      window.history.replaceState(null, "", "/login-" + slug);
+      if ($("auth-company-title")) {
+        $("auth-company-title").textContent = "Acesso Exclusivo · " + displayName;
+      }
+      if ($("auth-email-sub")) {
+        $("auth-email-sub").textContent = "Entre com sua conta autorizada para acessar o painel de " + displayName + ".";
+      }
+    } else {
+      window.history.replaceState(null, "", "/gerenciar-" + slug);
+    }
   }
   $("btn-logout").addEventListener("click", function () {
     if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.enabled) {

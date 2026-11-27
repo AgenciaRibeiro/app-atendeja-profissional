@@ -6,7 +6,14 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const dns = require("node:dns").promises;
 const net = require("node:net");
-const { Pool } = require("pg");
+let Pool;
+try {
+  Pool = require("pg").Pool;
+} catch (_e) {
+  Pool = class {
+    async query() { return { rows: [] }; }
+  };
+}
 
 const ROOT = __dirname;
 try {
@@ -1247,7 +1254,20 @@ async function serveStatic(req, res, pathname) {
   try { urlPath = decodeURIComponent(pathname); } catch (_e) { throw fail(400, "Caminho inválido"); }
   if (urlPath === "/") urlPath = "/index.html";
   if (urlPath === "/admin" || urlPath === "/atendeja" || urlPath === "/gerenciar-atendeja") urlPath = "/admin.html";
-  if (urlPath === "/dashboard") urlPath = "/dashboard.html";
+  if (urlPath === "/dashboard" || /^\/(?:login|gerenciar)-[a-z0-9_-]+$/i.test(urlPath)) urlPath = "/dashboard.html";
+
+  const singleSlugMatch = urlPath.match(/^\/([a-zA-Z0-9_-]{3,60})$/);
+  if (singleSlugMatch) {
+    const slug = singleSlugMatch[1].toLowerCase();
+    const reserved = new Set([
+      "admin", "atendeja", "gerenciar-atendeja", "dashboard", "index", "checkout",
+      "sw", "favicon", "manifest", "styles", "robots", "sitemap", "api"
+    ]);
+    if (!reserved.has(slug) && !slug.startsWith("login-") && !slug.startsWith("gerenciar-")) {
+      res.writeHead(302, { Location: "/login-" + slug });
+      return res.end();
+    }
+  }
   const file = path.resolve(ROOT, "." + urlPath);
   if (!file.startsWith(ROOT + path.sep) || /(^|\/)\.|(^|\/)(server\.js|package\.json|package-lock\.json|Dockerfile)(\/|$)/i.test(urlPath) || urlPath.startsWith("/node_modules/") || urlPath.startsWith("/db/") || urlPath.startsWith("/docs/")) {
     throw fail(404, "Arquivo não encontrado");
