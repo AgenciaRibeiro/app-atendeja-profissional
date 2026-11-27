@@ -18,6 +18,15 @@
 
 * { box-sizing: border-box; }
 
+[hidden] {
+  display: none !important;
+}
+
+#admin-app[hidden],
+.admin-layout[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: radial-gradient(ellipse at 50% -20%, #132420 0, transparent 48%), var(--bg);
@@ -191,6 +200,11 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   min-height: 100vh;
   background: var(--bg);
+}
+
+.admin-layout[hidden],
+#admin-app[hidden] {
+  display: none !important;
 }
 
 /* SIDEBAR */

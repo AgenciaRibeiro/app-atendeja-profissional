@@ -9,8 +9,14 @@
   function setGate(authenticated) {
     var app = $("app-layout");
     var gate = $("auth-gate");
-    if (app) app.hidden = !authenticated;
-    if (gate) gate.hidden = authenticated;
+    if (app) {
+      app.hidden = !authenticated;
+      app.style.display = authenticated ? "flex" : "none";
+    }
+    if (gate) {
+      gate.hidden = authenticated;
+      gate.style.display = authenticated ? "none" : "flex";
+    }
   }
   function setMessage(text, isError) {
     var el = $("auth-note");

@@ -63,9 +63,15 @@
 
   function setAuthenticated(show) {
     var loginShell = $("admin-shell-login");
-    if (loginShell) loginShell.hidden = show;
+    if (loginShell) {
+      loginShell.hidden = show;
+      loginShell.style.display = show ? "none" : "";
+    }
     var adminApp = $("admin-app");
-    if (adminApp) adminApp.hidden = !show;
+    if (adminApp) {
+      adminApp.hidden = !show;
+      adminApp.style.display = show ? "flex" : "none";
+    }
 
     var displayEmail = session && session.user ? session.user.email || "" : "";
     var displayName = (session && session.user && session.user.user_metadata && session.user.user_metadata.full_name) || "";
