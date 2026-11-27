@@ -553,8 +553,9 @@ async function handleWorkspace(req, res) {
   return send(res, 200, { revision: Number(result.rows[0].revision), updated_at: result.rows[0].updated_at });
 }
 
-const API_CONNECTIONS_FILE = path.join(__dirname, "data", "admin_api_connections.json");
-const LP_CONFIG_FILE = path.join(__dirname, "data", "landing_page_config.json");
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
+const API_CONNECTIONS_FILE = path.join(DATA_DIR, "admin_api_connections.json");
+const LP_CONFIG_FILE = path.join(DATA_DIR, "landing_page_config.json");
 const SUPPORTED_PROVIDERS = new Set(["openai", "openrouter", "gemini", "opencode", "groq"]);
 
 const DEFAULT_LP_CONFIG = {
@@ -608,8 +609,7 @@ const DEFAULT_LP_CONFIG = {
 };
 
 function ensureDataDir() {
-  const dir = path.dirname(API_CONNECTIONS_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
 }
 
 function readLandingPageConfig() {
@@ -1420,6 +1420,78 @@ async function serveStatic(req, res, pathname) {
   fs.createReadStream(file).pipe(res);
 }
 
+async function handleHealthCheck(req, res, url) {
+  const p = url.pathname;
+  if (p === "/health/live" || p === "/api/health/live") {
+    return send(res, 200, {
+      status: "ok",
+      type: "liveness",
+      uptime_seconds: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Probe de conectividade do banco PostgreSQL
+  let pgStatus = "disconnected";
+  let pgLatencyMs = null;
+  let pgError = null;
+
+  if (pool) {
+    const t0 = Date.now();
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query("SELECT 1 AS ping");
+        pgLatencyMs = Date.now() - t0;
+        pgStatus = "connected";
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      pgError = err && err.message ? err.message : "Connection failed";
+    }
+  } else {
+    pgError = "PostgreSQL pool not configured";
+  }
+
+  const supabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY && SUPABASE_SECRET_KEY);
+  const isReady = pgStatus === "connected";
+  const statusCode = isReady ? 200 : 503;
+
+  if (p === "/health/ready" || p === "/api/health/ready") {
+    return send(res, statusCode, {
+      status: isReady ? "ready" : "not_ready",
+      type: "readiness",
+      uptime_seconds: Math.floor(process.uptime()),
+      dependencies: {
+        postgres: { status: pgStatus, latency_ms: pgLatencyMs, ...(pgError ? { error: pgError } : {}) },
+        supabase: { status: supabaseConfigured ? "configured" : "unconfigured" }
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // /health ou /api/health geral
+  const mem = process.memoryUsage();
+  return send(res, statusCode, {
+    status: isReady ? "healthy" : "degraded",
+    ok: isReady,
+    version: "2.0.0",
+    uptime_seconds: Math.floor(process.uptime()),
+    memory: {
+      rss_mb: Math.round(mem.rss / 1024 / 1024),
+      heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024)
+    },
+    dependencies: {
+      postgres: { status: pgStatus, latency_ms: pgLatencyMs, ...(pgError ? { error: pgError } : {}) },
+      supabase: { status: supabaseConfigured ? "configured" : "unconfigured" }
+    },
+    postgresConfigured: Boolean(pool),
+    supabaseConfigured,
+    timestamp: new Date().toISOString()
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   setSecurityHeaders(res);
   try {
@@ -1428,8 +1500,13 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost");
     if (url.pathname.startsWith("/api/")) rateLimit(req);
     const parts = url.pathname.split("/").filter(Boolean);
-    if (url.pathname === "/api/health" && req.method === "GET") {
-      return send(res, 200, { ok: true, supabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY && SUPABASE_SECRET_KEY), postgresConfigured: Boolean(pool) });
+    if (
+      (url.pathname === "/api/health" || url.pathname === "/health" ||
+       url.pathname === "/api/health/live" || url.pathname === "/health/live" ||
+       url.pathname === "/api/health/ready" || url.pathname === "/health/ready") &&
+      req.method === "GET"
+    ) {
+      return await handleHealthCheck(req, res, url);
     }
     if (url.pathname === "/api/public-config" && req.method === "GET") {
       return send(res, 200, { supabaseUrl: SUPABASE_URL, supabasePublishableKey: SUPABASE_PUBLISHABLE_KEY });
