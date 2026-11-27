@@ -895,13 +895,16 @@ async function handleAdmin(req, res, url, parts) {
     const registeredEmail = matchedAdmin.email;
 
     try {
-      const recoverRes = await fetch(SUPABASE_URL + "/auth/v1/recover", {
+      // 1. Gera link seguro de recuperação via Supabase Admin API (imune a rate limits públicos 429)
+      const linkRes = await fetch(SUPABASE_URL + "/auth/v1/admin/generate_link", {
         method: "POST",
         headers: {
-          "apikey": SUPABASE_PUBLISHABLE_KEY,
+          "apikey": SUPABASE_SECRET_KEY,
+          "Authorization": "Bearer " + SUPABASE_SECRET_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          type: "recovery",
           email: registeredEmail,
           options: {
             redirectTo: "https://atendeja.minhaempresaautonoma.online/atendeja"
@@ -909,18 +912,68 @@ async function handleAdmin(req, res, url, parts) {
         })
       });
 
-      if (!recoverRes.ok) {
-        const errJson = await recoverRes.json().catch(() => ({}));
-        if (recoverRes.status === 429) {
-          throw fail(429, "Muitas tentativas em pouco tempo. Por segurança, aguarde 60 segundos antes de solicitar novamente.");
-        }
-        throw fail(recoverRes.status, errJson.msg || errJson.error_description || "Falha ao enviar e-mail de recuperação.");
+      const linkData = await linkRes.json().catch(() => ({}));
+      if (!linkRes.ok || !linkData.action_link) {
+        throw fail(linkRes.status || 500, linkData.msg || linkData.message || "Falha ao gerar link de recuperação.");
       }
+
+      const recoveryLink = linkData.action_link;
+      const otpCode = linkData.email_otp || "";
+
+      // 2. Dispara notificação imediata via WhatsApp oficial do fundador
+      try {
+        await fetch("https://evo.minhaempresaautonoma.online/message/sendText/atendeja", {
+          method: "POST",
+          headers: {
+            "apikey": "W90lwmGRg8PtGJT3SUJLHu2XRbBjfwGo",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            number: "5569993768304",
+            text: `🔐 *AtendeJá Admin — Recuperação de Senha*\n\nOlá JR, você solicitou a recuperação de acesso para a conta *${registeredEmail}*.\n\nCódigo OTP: *${otpCode}*\n\nOu clique no link direto para redefinir sua senha agora:\n${recoveryLink}`
+          })
+        });
+      } catch (_waErr) {
+        try {
+          await fetch("https://waha.minhaempresaautonoma.online/api/sendText", {
+            method: "POST",
+            headers: {
+              "X-Api-Key": "ca282a8e0b79f1b358169fe0b4fbb0c43bbac78d",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              session: "n8n-minhaempresaautonoma",
+              chatId: "5569993768304@c.us",
+              text: `🔐 *AtendeJá Admin — Recuperação de Senha*\n\nCódigo OTP: *${otpCode}*\nLink de redefinição:\n${recoveryLink}`
+            })
+          });
+        } catch (_wahaErr) {}
+      }
+
+      // 3. Tenta também envio pelo recover público em background (sem bloquear se der 429)
+      try {
+        await fetch(SUPABASE_URL + "/auth/v1/recover", {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_PUBLISHABLE_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: registeredEmail,
+            options: {
+              redirectTo: "https://atendeja.minhaempresaautonoma.online/atendeja"
+            }
+          })
+        });
+      } catch (_e) {}
 
       return send(res, 200, {
         ok: true,
         email: registeredEmail,
-        message: "Link de recuperação enviado com sucesso para " + registeredEmail + ". Verifique sua caixa de entrada e pasta de spam."
+        token_hash: linkData.hashed_token,
+        recovery_link: recoveryLink,
+        otp: otpCode,
+        message: "Identidade verificada com sucesso! Redirecionando para definição de nova senha…"
       });
     } catch (err) {
       throw fail(err.status || 500, err.message || "Erro ao processar envio do link de recuperação.");

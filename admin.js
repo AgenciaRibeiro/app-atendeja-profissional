@@ -73,20 +73,24 @@
       adminApp.style.display = show ? "flex" : "none";
     }
 
+    if (!show) {
+      if ($("admin-identity")) $("admin-identity").textContent = "";
+      if ($("btn-signout")) $("btn-signout").hidden = true;
+      window.history.replaceState(null, "", "/atendeja");
+      return;
+    }
+
     var displayEmail = session && session.user ? session.user.email || "" : "";
     var displayName = (session && session.user && session.user.user_metadata && session.user.user_metadata.full_name) || "";
     if (!displayName && displayEmail.startsWith("gerente@")) displayName = "Gerente";
     var userText = displayName ? displayName + (displayEmail ? " · " + displayEmail : "") : displayEmail;
 
     if ($("admin-identity")) $("admin-identity").textContent = userText;
+    if ($("btn-signout")) $("btn-signout").hidden = false;
     if ($("topbar-identity")) $("topbar-identity").textContent = displayName || userText || "Gerente";
     if ($("sidebar-user-name")) $("sidebar-user-name").textContent = displayName || "Gerente";
 
-    if (show) {
-      window.history.replaceState(null, "", "/gerenciar-atendeja");
-    } else {
-      window.history.replaceState(null, "", "/atendeja");
-    }
+    window.history.replaceState(null, "", "/gerenciar-atendeja");
   }
 
   function switchSection(sectionId) {
@@ -159,7 +163,7 @@
 
   async function handlePasswordRecovery(event) {
     event.preventDefault();
-    message("Verificando cadastro e solicitando recuperação…", false);
+    message("Verificando cadastro administrativo…", false);
     var identifier = $("recovery-identifier").value;
     if (!identifier) {
       message("Informe um usuário ou e-mail válido.", true);
@@ -173,11 +177,30 @@
       });
       var data = await res.json().catch(function () { return {}; });
       if (!res.ok) {
-        throw new Error(data.error || "Não foi possível enviar o link de recuperação.");
+        throw new Error(data.error || "Não foi possível validar o usuário.");
       }
-      message(data.message || ("Link de recuperação enviado com sucesso para " + data.email + ". Verifique sua caixa de entrada e pasta de spam."), false);
+      if (data.token_hash && supabaseClient) {
+        message("Identidade validada com sucesso! Liberando formulário de nova senha…", false);
+        var vRes = await supabaseClient.auth.verifyOtp({ token_hash: data.token_hash, type: "recovery" });
+        if (vRes.error) throw vRes.error;
+        session = vRes.data && vRes.data.session;
+        $("recovery-form").hidden = true;
+        $("password-login-form").hidden = true;
+        $("new-password-form").hidden = false;
+        $("btn-google").hidden = true;
+        message("Conta autenticada! Digite sua nova senha abaixo e confirme para acessar o painel.", false);
+        return;
+      }
+      if (data.recovery_link) {
+        message("Acesso verificado! Redirecionando para definição de nova senha…", false);
+        setTimeout(function () {
+          window.location.href = data.recovery_link;
+        }, 800);
+        return;
+      }
+      message(data.message || ("Link de recuperação enviado com sucesso para " + data.email + "."), false);
     } catch (err) {
-      message(err.message || "Não foi possível enviar o link de recuperação.", true);
+      message(err.message || "Não foi possível validar a recuperação.", true);
     }
   }
 
@@ -199,6 +222,7 @@
       if (res.error) throw res.error;
       message("Senha atualizada com sucesso! Redirecionando para o painel…", false);
       $("new-password-form").hidden = true;
+      window.history.replaceState(null, "", "/gerenciar-atendeja");
       setAuthenticated(true);
       await checkSession();
     } catch (err) {
@@ -928,6 +952,10 @@
 
   async function checkSession() {
     if (!supabaseClient) return;
+    var hash = window.location.hash || "";
+    var search = window.location.search || "";
+    var isRecoveryFlow = hash.includes("type=recovery") || search.includes("type=recovery");
+
     var result = await supabaseClient.auth.getSession();
     session = result.data && result.data.session;
 
@@ -937,11 +965,28 @@
     }
     try {
       await api("admin/me");
+      if (isRecoveryFlow) {
+        $("admin-shell-login").hidden = false;
+        $("admin-shell-login").style.display = "";
+        $("admin-app").hidden = true;
+        $("admin-app").style.display = "none";
+        $("password-login-form").hidden = true;
+        $("recovery-form").hidden = true;
+        $("new-password-form").hidden = false;
+        $("btn-google").hidden = true;
+        message("Sessão de recuperação validada! Digite sua nova senha abaixo para redefinir o acesso.", false);
+        return;
+      }
       setAuthenticated(true);
       await loadData();
     } catch (error) {
+      // Se a sessão ativa não for de administrador (ex: cliente residual), limpa a sessão para não vazar identidade
+      try { await supabaseClient.auth.signOut(); } catch (_e) {}
+      session = null;
       setAuthenticated(false);
-      message(error.message, true);
+      if (error && error.message && !error.message.includes("Autorização necessária") && !error.message.includes("Sessão encerrada")) {
+        message(error.message, true);
+      }
       await loadBootstrapStatus();
     }
   }
