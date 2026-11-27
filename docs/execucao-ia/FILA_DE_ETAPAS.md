@@ -11,7 +11,7 @@ Não reordenar sem justificativa documentada e decisão de JR.
 | 04 | Pagamentos Mercado Pago, backend e n8n | CONCLUÍDA |
 | 05 | Reembolso, chargeback e estados de assinatura | CONCLUÍDA |
 | 06 | Segredos, SSRF e hardening | CONCLUÍDA |
-| 07 | Limites por plano e rate limit | AGUARDANDO |
+| 07 | Limites por plano e rate limit | CONCLUÍDA |
 | 08 | WhatsApp/WAHA e automações | AGUARDANDO |
 | 09 | Autenticação, sessão e painel admin | AGUARDANDO |
 | 10 | Healthchecks, observabilidade e persistência | AGUARDANDO |

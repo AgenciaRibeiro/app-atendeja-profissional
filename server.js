@@ -144,7 +144,8 @@ function applyCors(req, res) {
 
 function rateLimit(req) {
   const now = Date.now();
-  const ip = String(req.socket.remoteAddress || "unknown");
+  const rawIp = req.headers["cf-connecting-ip"] || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  const ip = String(rawIp).split(",")[0].trim();
   let entry = limiter.get(ip);
   if (!entry || now - entry.start > 60000) entry = { start: now, count: 0 };
   entry.count += 1;
@@ -168,8 +169,6 @@ async function readRawBody(req) {
   for await (const chunk of req) {
     length += chunk.length;
     if (length > 1024 * 1024) throw fail(413, "Corpo da solicitação excede 1 MB");
-  // Rate limit reforçado por plano
-  if (req.userPlan && req.userPlan.max_apis && entry.count > req.userPlan.max_apis * 15) throw fail(429, "Limite de API do seu plano atingido");
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);
