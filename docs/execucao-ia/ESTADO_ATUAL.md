@@ -1,10 +1,10 @@
 # Estado atual da missão
 
 Missão: auditoria corretiva e estabilização do AtendeJá Profissional.  
-Status: ATIVA — Etapas 00, 01, 02, 03, 04 e 05 concluídas; Etapa 06 pronta para autorização.  
-Etapa atual: 05 — Reembolso, chargeback e estados de assinatura (CONCLUÍDA).  
-Última etapa corretiva concluída: 05 — Reembolso, chargeback e estados de assinatura (validada com testes sintéticos em 2026-11-27).  
-Próxima ação: Autorização formal de JR para iniciar a Etapa 06 (Segredos, SSRF e hardening).
+Status: ATIVA — Etapas 00, 01, 02, 03, 04, 05 e 06 concluídas; Etapa 07 pronta para autorização.  
+Etapa atual: 06 — Segredos, SSRF e hardening (CONCLUÍDA).  
+Última etapa corretiva concluída: 06 — Segredos, SSRF e hardening (validada com 19 testes em 2026-11-27).  
+Próxima ação: Autorização formal de JR para iniciar a Etapa 07 (Limites por plano e rate limit).
 
 ## Escopo congelado
 Corrigir e validar problemas existentes conforme o plano mestre. Não redesenhar dashboard/landing nem criar funcionalidades.

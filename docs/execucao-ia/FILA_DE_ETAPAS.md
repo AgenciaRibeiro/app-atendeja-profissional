@@ -10,7 +10,7 @@ Não reordenar sem justificativa documentada e decisão de JR.
 | 03 | Segurança multi-tenant e autorização | CONCLUÍDA |
 | 04 | Pagamentos Mercado Pago, backend e n8n | CONCLUÍDA |
 | 05 | Reembolso, chargeback e estados de assinatura | CONCLUÍDA |
-| 06 | Segredos, SSRF e hardening | AGUARDANDO |
+| 06 | Segredos, SSRF e hardening | CONCLUÍDA |
 | 07 | Limites por plano e rate limit | AGUARDANDO |
 | 08 | WhatsApp/WAHA e automações | AGUARDANDO |
 | 09 | Autenticação, sessão e painel admin | AGUARDANDO |

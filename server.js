@@ -648,7 +648,8 @@ async function testProviderConnection(provider, apiKey, model, baseUrl) {
   }
 
   if (provider === "gemini") {
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + encodeURIComponent(key), {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+      headers: { "x-goog-api-key": key },
       signal: AbortSignal.timeout(10000)
     });
     const data = await res.json().catch(() => ({}));
@@ -667,7 +668,9 @@ async function testProviderConnection(provider, apiKey, model, baseUrl) {
   }
 
   if (provider === "opencode") {
-    const url = (baseUrl || "https://api.opencode.ai/v1").replace(/\/$/, "") + "/models";
+    let customUrl = "https://api.opencode.ai/v1";
+    if (baseUrl) customUrl = (await validateEndpointUrl(baseUrl)).replace(/\/$/, "");
+    const url = customUrl + "/models";
     const res = await fetch(url, {
       headers: { Authorization: "Bearer " + key },
       signal: AbortSignal.timeout(10000)
@@ -702,10 +705,13 @@ async function executeAiChat(params) {
   if (activeKey) {
     try {
       if (provider === "gemini") {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(activeKey)}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent`;
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": activeKey
+          },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: sys }] },
             contents: [{ parts: [{ text: prompt.trim() }] }],
@@ -722,7 +728,11 @@ async function executeAiChat(params) {
       let endpoint = "https://api.openai.com/v1/chat/completions";
       if (provider === "groq") endpoint = "https://api.groq.com/openai/v1/chat/completions";
       if (provider === "openrouter") endpoint = "https://openrouter.ai/api/v1/chat/completions";
-      if (provider === "opencode") endpoint = ((conn && conn.baseUrl) || "https://api.opencode.ai/v1").replace(/\/$/, "") + "/chat/completions";
+      if (provider === "opencode") {
+        let customUrl = "https://api.opencode.ai/v1";
+        if (conn && conn.baseUrl) customUrl = (await validateEndpointUrl(conn.baseUrl)).replace(/\/$/, "");
+        endpoint = customUrl + "/chat/completions";
+      }
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -745,7 +755,7 @@ async function executeAiChat(params) {
       const reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "Sem resposta do modelo";
       return { ok: true, reply, provider, model: activeModel, external: true };
     } catch (err) {
-      process.stderr.write(`AI Chat fallback on ${provider}: ${err.message}\n`);
+      process.stderr.write(`AI Chat fallback on ${provider}: ${String(err && err.message ? err.message : "").replace(/key=[^&\s]+/gi, "key=REDACTED")}\n`);
     }
   }
 
@@ -930,10 +940,15 @@ async function handleAdmin(req, res, url, parts) {
       }
     }
 
+    let cleanBaseUrl = typeof body.baseUrl === "string" ? body.baseUrl.trim() : (current.baseUrl || "");
+    if (cleanBaseUrl) {
+      cleanBaseUrl = await validateEndpointUrl(cleanBaseUrl);
+    }
+
     raw[provider] = {
       apiKey: keyToSave,
       model: typeof body.model === "string" ? body.model.trim() : (current.model || ""),
-      baseUrl: typeof body.baseUrl === "string" ? body.baseUrl.trim() : (current.baseUrl || ""),
+      baseUrl: cleanBaseUrl,
       updatedAt: new Date().toISOString()
     };
     writeApiConnections(raw);
@@ -974,7 +989,10 @@ async function handleAdmin(req, res, url, parts) {
     if (!apiKey) throw fail(400, `Nenhuma chave informada ou salva para ${provider.toUpperCase()}`);
 
     const model = body.model || current.model || "";
-    const baseUrl = body.baseUrl || current.baseUrl || "";
+    let baseUrl = body.baseUrl || current.baseUrl || "";
+    if (baseUrl) {
+      baseUrl = await validateEndpointUrl(baseUrl);
+    }
 
     const result = await testProviderConnection(provider, apiKey, model, baseUrl);
     return send(res, 200, result);
