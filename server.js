@@ -36,6 +36,21 @@ const BOOTSTRAP_TOKEN = process.env.FOUNDER_BOOTSTRAP_TOKEN || "";
 const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || "";
 const WAHA_BASE_URL = (process.env.WAHA_BASE_URL || "https://waha.minhaempresaautonoma.online").replace(/\/$/, "");
 const WAHA_API_KEY = process.env.WAHA_API_KEY || "ca282a8e0b79f1b358169fe0b4fbb0c43bbac78d";
+const EVOLUTION_BASE_URL = (process.env.EVOLUTION_BASE_URL || "https://evo.minhaempresaautonoma.online").replace(/\/$/, "");
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || "W90lwmGRg8PtGJT3SUJLHu2XRbBjfwGo";
+
+async function evoFetch(path, options = {}) {
+  const url = `${EVOLUTION_BASE_URL}${path}`;
+  const headers = Object.assign({
+    "apikey": EVOLUTION_API_KEY
+  }, options.headers || {});
+  let body = options.body;
+  if (body && typeof body === "object" && !(body instanceof Buffer)) {
+    body = JSON.stringify(body);
+    headers["Content-Type"] = "application/json";
+  }
+  return fetch(url, Object.assign({}, options, { body, headers, signal: AbortSignal.timeout(15000) }));
+}
 
 async function wahaFetch(path, options = {}) {
   const url = `${WAHA_BASE_URL}${path}`;
@@ -1054,20 +1069,31 @@ async function handleClient(req, res, parts) {
 
     if (subRoute === "status" && req.method === "GET") {
       try {
-        const wahaRes = await wahaFetch("/api/sessions/" + sessionName);
-        if (wahaRes.status === 404) {
+        const stateRes = await evoFetch("/instance/connectionState/" + sessionName);
+        if (stateRes.status === 404) {
           return send(res, 200, { ok: true, status: "DISCONNECTED", connected: false });
         }
-        const sessionData = await wahaRes.json().catch(() => ({}));
-        const status = sessionData.status || "DISCONNECTED";
-        const isConnected = status === "WORKING";
-        const rawPhone = sessionData.me?.id ? String(sessionData.me.id).replace(/[^0-9]/g, "") : "";
+        const stateData = await stateRes.json().catch(() => ({}));
+        const rawState = stateData.instance?.state || "close";
+        const isConnected = rawState === "open";
+        let phone = "";
+        let pushName = "";
+        if (isConnected) {
+          const infoRes = await evoFetch("/instance/fetchInstances?instanceName=" + sessionName);
+          const infoData = await infoRes.json().catch(() => ([]));
+          const list = Array.isArray(infoData) ? infoData : (infoData.instance ? [infoData.instance] : []);
+          const inst = list.find(x => x.name === sessionName) || list[0];
+          if (inst) {
+            phone = inst.ownerJid ? String(inst.ownerJid).replace(/[^0-9]/g, "") : "";
+            pushName = inst.profileName || "";
+          }
+        }
         return send(res, 200, {
           ok: true,
-          status,
+          status: isConnected ? "WORKING" : (rawState === "connecting" ? "SCAN_QR_CODE" : "DISCONNECTED"),
           connected: isConnected,
-          phone: rawPhone,
-          pushName: sessionData.me?.pushName || ""
+          phone,
+          pushName
         });
       } catch (err) {
         return send(res, 200, { ok: true, status: "DISCONNECTED", connected: false, error: err.message });
@@ -1076,43 +1102,60 @@ async function handleClient(req, res, parts) {
 
     if (subRoute === "connect" && req.method === "POST") {
       try {
-        const checkRes = await wahaFetch("/api/sessions/" + sessionName);
+        const checkRes = await evoFetch("/instance/connectionState/" + sessionName);
         if (checkRes.status === 404) {
-          await wahaFetch("/api/sessions", {
+          const createRes = await evoFetch("/instance/create", {
             method: "POST",
-            body: { name: sessionName }
+            body: {
+              instanceName: sessionName,
+              qrcode: true,
+              integration: "WHATSAPP-BAILEYS"
+            }
+          });
+          const createJson = await createRes.json().catch(() => ({}));
+          const qrDataUrl = createJson.qrcode?.base64 || "";
+          return send(res, 200, {
+            ok: true,
+            status: "STARTING",
+            qrDataUrl: qrDataUrl || undefined,
+            message: "Instância criada no Evolution API; aguardando leitura do QR Code"
           });
         }
-        await wahaFetch("/api/sessions/" + sessionName + "/start", { method: "POST" });
-        return send(res, 200, { ok: true, status: "STARTING", message: "Sessão iniciada; aguardando QR Code" });
+        const connectRes = await evoFetch("/instance/connect/" + sessionName);
+        const connectJson = await connectRes.json().catch(() => ({}));
+        return send(res, 200, {
+          ok: true,
+          status: "STARTING",
+          qrDataUrl: connectJson.base64 || undefined,
+          message: "Conexão Evolution API iniciada; aguardando leitura do QR Code"
+        });
       } catch (err) {
-        throw fail(502, "Não foi possível iniciar o WhatsApp no servidor: " + err.message);
+        throw fail(502, "Não foi possível iniciar o WhatsApp no Evolution API: " + err.message);
       }
     }
 
     if (subRoute === "qr" && req.method === "GET") {
       try {
-        const qrRes = await wahaFetch("/api/" + sessionName + "/auth/qr", {
-          headers: { Accept: "image/png" }
-        });
+        const qrRes = await evoFetch("/instance/connect/" + sessionName);
         if (qrRes.status === 200) {
-          const buffer = await qrRes.arrayBuffer();
-          const base64 = Buffer.from(buffer).toString("base64");
-          return send(res, 200, { ok: true, qrDataUrl: "data:image/png;base64," + base64 });
+          const data = await qrRes.json().catch(() => ({}));
+          if (data.base64) {
+            return send(res, 200, { ok: true, qrDataUrl: data.base64 });
+          }
         }
-        return send(res, 200, { ok: false, status: "WAITING_QR", message: "QR Code sendo gerado. Aguarde alguns segundos." });
+        return send(res, 200, { ok: false, status: "WAITING_QR", message: "QR Code sendo gerado pelo Evolution API. Aguarde alguns segundos." });
       } catch (err) {
-        throw fail(502, "Erro ao obter QR Code do WhatsApp: " + err.message);
+        throw fail(502, "Erro ao obter QR Code do Evolution API: " + err.message);
       }
     }
 
     if (subRoute === "disconnect" && req.method === "POST") {
       try {
-        await wahaFetch("/api/sessions/" + sessionName + "/logout", { method: "POST" }).catch(() => {});
-        await wahaFetch("/api/sessions/" + sessionName + "/stop", { method: "POST" }).catch(() => {});
+        await evoFetch("/instance/logout/" + sessionName, { method: "DELETE" }).catch(() => {});
+        await evoFetch("/instance/delete/" + sessionName, { method: "DELETE" }).catch(() => {});
         return send(res, 200, { ok: true, status: "DISCONNECTED", disconnected: true });
       } catch (err) {
-        throw fail(502, "Erro ao desconectar WhatsApp: " + err.message);
+        throw fail(502, "Erro ao desconectar WhatsApp no Evolution API: " + err.message);
       }
     }
 
