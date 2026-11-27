@@ -1,0 +1,622 @@
+{
+  "id": "kawt70Q2DuuG0pMo",
+  "name": "AtendeJá — Mercado Pago (Pix Direto + Confirmação Automática + WAHA)",
+  "active": true,
+  "isArchived": false,
+  "versionId": "a7db97ae-2c5d-4cdf-8853-2331809ffc21",
+  "activeVersionId": "a7db97ae-2c5d-4cdf-8853-2331809ffc21",
+  "triggerCount": 2,
+  "nodeCount": 15,
+  "createdAt": "2026-11-23T05:18:33.612Z",
+  "updatedAt": "2026-11-27T03:24:28.599Z",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "tags": [],
+  "parentFolderId": "86ccDQYrivxdtcXe",
+  "scopes": [
+    "execution:delete",
+    "execution:list",
+    "execution:read",
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true,
+  "connections": {
+    "Webhook Criar Checkout (MP)": {
+      "main": [
+        [
+          {
+            "node": "Validar Pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Pix Mercado Pago": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Pix)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Confirmação MP": {
+      "main": [
+        [
+          {
+            "node": "Consultar Pagamento MP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Pagamento MP": {
+      "main": [
+        [
+          {
+            "node": "Pagamento Aprovado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pagamento Aprovado?": {
+      "main": [
+        [
+          {
+            "node": "Ativar Cliente via WAHA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Preparar Assinatura Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "É Reembolso ou Estorno?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ativar Cliente via WAHA": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (MP 200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Pedido": {
+      "main": [
+        [
+          {
+            "node": "Criar Pix Mercado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Assinatura Webhook": {
+      "main": [
+        [
+          {
+            "node": "Notificar Backend AtendeJá",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Backend AtendeJá": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (MP 200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É Reembolso ou Estorno?": {
+      "main": [
+        [
+          {
+            "node": "Preparar Assinatura Estorno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (MP 200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Assinatura Estorno": {
+      "main": [
+        [
+          {
+            "node": "Notificar Backend Estorno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Backend Estorno": {
+      "main": [
+        [
+          {
+            "node": "Alertar Fundador via WAHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alertar Fundador via WAHA": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (MP 200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atendeja/criar-checkout",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "b7c108da-269a-49e2-b8c0-73d2911b6df8",
+      "name": "Webhook Criar Checkout (MP)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "atendeja-criar-checkout"
+    },
+    {
+      "parameters": {
+        "jsCode": "const PRECOS_OFICIAIS = {\n  essencial: 1,\n  pro: 1,\n  empresa: 1\n};\nconst items = $input.all();\nconst results = [];\nfor (const item of items) {\n  const raw = item.json || {};\n  const body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n  const planoKey = String(body.plano || 'pro').trim().toLowerCase();\n  const valorMensal = PRECOS_OFICIAIS[planoKey] || PRECOS_OFICIAIS.pro;\n  const empresa = String(body.empresa || 'Cliente AtendeJa').trim();\n  const atendente = String(body.atendente || 'Atendente').trim();\n  const nicho = String(body.nicho || 'geral').trim();\n  const whatsapp = String(body.whatsapp || '').replace(/\\D/g, '');\n  const cidade = String(body.cidade || '').trim();\n  const metodo = 'pix';\n  const ts = Date.now();\n  const external_reference = 'ATJ-' + ts + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();\n  const email = String(body.email || '').trim() || ('cliente+' + ts + '@atendeja.com.br');\n  const description = 'AtendeJa Plano ' + planoKey.toUpperCase() + ' - ' + empresa;\n  results.push({\n    json: {\n      external_reference,\n      pedidoId: external_reference,\n      plano: planoKey,\n      valorMensal,\n      metodo,\n      description,\n      email,\n      empresa,\n      atendente,\n      nicho,\n      whatsapp,\n      cidade,\n      metadata: {\n        pedidoId: external_reference,\n        plano: planoKey,\n        empresa,\n        atendente,\n        nicho,\n        whatsapp,\n        cidade\n      }\n    }\n  });\n}\nreturn results;"
+      },
+      "id": "b04d7fb3-e323-4054-838a-f74fe50a9dba",
+      "name": "Validar Pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/v1/payments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Idempotency-Key",
+              "value": "={{ $json.external_reference }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ transaction_amount: $json.valorMensal, description: $json.description, payment_method_id: 'pix', external_reference: $json.external_reference, notification_url: 'https://n8nweb.minhaempresaautonoma.online/webhook/atendeja/webhook-pagamento', payer: { email: $json.email }, metadata: $json.metadata }) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "fa92b59c-d75f-4292-a0af-986fed174a84",
+      "name": "Criar Pix Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "6P3cv9dfkyfEx64X",
+          "name": "MERCADO PAGO - CHECKOUT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, paymentId: $json.id, pedidoId: $('Validar Pedido').item.json.pedidoId, valorMensal: $('Validar Pedido').item.json.valorMensal, pixCopiaECola: $json.point_of_interaction?.transaction_data?.qr_code || '', qrCodeBase64: $json.point_of_interaction?.transaction_data?.qr_code_base64 || '', ticketUrl: $json.point_of_interaction?.transaction_data?.ticket_url || '', status: $json.status || 'pending' }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "434511a8-3dd3-412b-b8d3-3e1c6064ac67",
+      "name": "Respond to Webhook (Pix)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atendeja/webhook-pagamento",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "055b56b6-d560-4431-bfe4-b748eab196f9",
+      "name": "Webhook Confirmação MP",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        464
+      ],
+      "webhookId": "atendeja-webhook-pagamento"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mercadopago.com/v1/payments/{{ $json.body?.data?.id || $json.query?.['data.id'] || $json.body?.id || $json.data?.id || $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "b5b81348-e7b9-4d4f-983b-8bcdc4f745e8",
+      "name": "Consultar Pagamento MP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        464
+      ],
+      "continueOnFail": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "6P3cv9dfkyfEx64X",
+          "name": "MERCADO PAGO - CHECKOUT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-mp-approved",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9cbf0c67-25a5-4f09-b7da-52130ff84fc6",
+      "name": "Pagamento Aprovado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        528,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waha.minhaempresaautonoma.online/api/sendText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const m = $json.metadata || {}; const rawTel = String(m.whatsapp || '').replace(/\\D/g, ''); const tel = rawTel && !rawTel.startsWith('55') && (rawTel.length === 10 || rawTel.length === 11) ? '55' + rawTel : rawTel; const link = `https://atendeja.minhaempresaautonoma.online/dashboard.html?empresa=${encodeURIComponent(m.empresa || 'Sua Empresa')}&atendente=${encodeURIComponent(m.atendente || 'Equipe')}&nicho=${encodeURIComponent(m.nicho || 'geral')}&pedidoId=${encodeURIComponent($json.external_reference || $json.id)}`; return JSON.stringify({ session: 'default', chatId: tel ? `${tel}@c.us` : '5569993768304@c.us', text: `Olá, ${m.atendente || 'cliente'}! 🎉 Seu pagamento via Pix (${$json.external_reference || $json.id}) para o *AtendeJá* (${m.empresa || 'Sua Empresa'}) foi aprovado!\\n\\nSeu acesso já está liberado:\\n${link}\\n\\nConte com a equipe AtendeJá!` }); })() }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "35914be5-7f7c-4d78-a25e-146eb0696672",
+      "name": "Ativar Cliente via WAHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        384
+      ],
+      "continueOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yPJXvDYzlNmWKflp",
+          "name": "HAWA - APIKEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ received: true }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e8de6031-5866-4a2c-bb06-4cfc0ea1f2fb",
+      "name": "Respond to Webhook (MP 200 OK)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        480
+      ]
+    },
+    {
+      "id": "55e5a3c7-66ac-433f-bfe9-d2e6a3bf6de1",
+      "name": "Preparar Assinatura Webhook",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        560
+      ],
+      "parameters": {
+        "jsCode": "const secret = 'atendeja-payment-webhook-secret-n8n-2026';\nconst item = $json;\nconst m = item.metadata || {};\n\nconst email = String(item.payer?.email || m.email || '').toLowerCase().trim();\nconst plan = String(m.plano || 'pro').toLowerCase().trim();\nconst amount = Number(item.transaction_amount || 1.00);\nconst paymentId = String(item.id || item.payment_id || '').trim();\nconst paidAt = item.date_approved || new Date().toISOString();\n\nconst payload = {\n  payment_id: paymentId,\n  email_google: email,\n  plan_code: plan,\n  amount_brl: amount,\n  status: 'approved',\n  payment_method: 'pix',\n  paid_at: paidAt\n};\n\nconst raw = JSON.stringify(payload);\nlet sigHex = '';\n\ntry {\n  const c = require('crypto');\n  sigHex = c.createHmac('sha256', secret).update(raw).digest('hex');\n} catch (_e) {\n  const enc = new TextEncoder();\n  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);\n  const buf = await crypto.subtle.sign('HMAC', key, enc.encode(raw));\n  sigHex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');\n}\n\nreturn [{\n  json: {\n    ...payload,\n    signature: 'sha256=' + sigHex\n  }\n}];"
+      }
+    },
+    {
+      "id": "cd1748cf-1006-4e90-af50-5488783c03d6",
+      "name": "Notificar Backend AtendeJá",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1088,
+        560
+      ],
+      "parameters": {
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-atendeja-signature",
+              "value": "={{ $json.signature }}"
+            }
+          ]
+        },
+        "jsonBody": "={{ JSON.stringify({ payment_id: $json.payment_id, email_google: $json.email_google, plan_code: $json.plan_code, amount_brl: $json.amount_brl, status: $json.status, payment_method: $json.payment_method, paid_at: $json.paid_at }) }}",
+        "method": "POST",
+        "options": {
+          "timeout": 15000
+        },
+        "sendBody": true,
+        "sendHeaders": true,
+        "specifyBody": "json",
+        "url": "https://atendeja.minhaempresaautonoma.online/api/webhooks/mercadopago"
+      }
+    },
+    {
+      "id": "c657acdd-5065-4e6b-98ae-f4c9ccbb95ec",
+      "name": "É Reembolso ou Estorno?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        528,
+        680
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "cond-refunded",
+              "leftValue": "={{ $json.status }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "refunded"
+            },
+            {
+              "id": "cond-chargedback",
+              "leftValue": "={{ $json.status }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "charged_back"
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "8c93c95e-9f46-4575-b96a-d21eb2b396ab",
+      "name": "Preparar Assinatura Estorno",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        760
+      ],
+      "parameters": {
+        "jsCode": "const secret = 'atendeja-payment-webhook-secret-n8n-2026';\nconst item = $json;\nconst m = item.metadata || {};\n\nconst email = String(item.payer?.email || m.email || '').toLowerCase().trim();\nconst plan = String(m.plano || 'pro').toLowerCase().trim();\nconst amount = Number(item.transaction_amount || 1.00);\nconst paymentId = String(item.id || item.payment_id || '').trim();\nconst paidAt = item.date_approved || new Date().toISOString();\nconst status = String(item.status || 'refunded').toLowerCase().trim();\n\nconst payload = {\n  payment_id: paymentId,\n  email_google: email,\n  plan_code: plan,\n  amount_brl: amount,\n  status: status,\n  payment_method: 'pix',\n  paid_at: paidAt\n};\n\nconst raw = JSON.stringify(payload);\nlet sigHex = '';\ntry {\n  const c = require('crypto');\n  sigHex = c.createHmac('sha256', secret).update(raw).digest('hex');\n} catch (_e) {\n  const enc = new TextEncoder();\n  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);\n  const buf = await crypto.subtle.sign('HMAC', key, enc.encode(raw));\n  sigHex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');\n}\n\nreturn [{\n  json: {\n    ...payload,\n    signature: 'sha256=' + sigHex\n  }\n}];"
+      }
+    },
+    {
+      "id": "35a0cda0-e4ee-4be5-bb2c-67a648bb7d2d",
+      "name": "Notificar Backend Estorno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1088,
+        760
+      ],
+      "parameters": {
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-atendeja-signature",
+              "value": "={{ $json.signature }}"
+            }
+          ]
+        },
+        "jsonBody": "={{ JSON.stringify({ payment_id: $json.payment_id, email_google: $json.email_google, plan_code: $json.plan_code, amount_brl: $json.amount_brl, status: $json.status, payment_method: $json.payment_method, paid_at: $json.paid_at }) }}",
+        "method": "POST",
+        "options": {
+          "timeout": 15000
+        },
+        "sendBody": true,
+        "sendHeaders": true,
+        "specifyBody": "json",
+        "url": "https://atendeja.minhaempresaautonoma.online/api/webhooks/mercadopago"
+      }
+    },
+    {
+      "id": "0c23fcf2-babc-4f3c-9e34-4e4281740067",
+      "name": "Alertar Fundador via WAHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        760
+      ],
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "jsonBody": "={{ JSON.stringify({ session: 'default', chatId: '5569993768304@c.us', text: `⚠️ *Alerta AtendeJá: Reembolso / Contestação Processada*\\\\n\\\\n👤 *Cliente:* ${$json.email_google}\\\\n💳 *ID Pagamento:* ${$json.payment_id}\\\\n💰 *Valor:* R$ ${$json.amount_brl}\\\\n📌 *Status:* ${$json.status.toUpperCase()}\\\\n\\\\n🔒 *Ação Automática:* Acesso ao dashboard e assistentes de IA BLOQUEADO imediatamente.` }) }}",
+        "method": "POST",
+        "options": {
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "sendHeaders": true,
+        "specifyBody": "json",
+        "url": "https://waha.minhaempresaautonoma.online/api/sendText"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yPJXvDYzlNmWKflp",
+          "name": "HAWA - APIKEY"
+        }
+      }
+    }
+  ],
+  "nodeGroups": [],
+  "activeVersion": {
+    "sameAsDraft": true
+  },
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  }
+}
