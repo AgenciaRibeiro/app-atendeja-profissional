@@ -40,7 +40,7 @@
     var raw = String(identifier || "").trim();
     if (!raw) return "";
     if (raw.toLowerCase() === "gerente") {
-      return "gerente@minhaempresaautonoma.online";
+      return "3jr.agenciadigital@gmail.com";
     }
     return raw.toLowerCase();
   }
@@ -159,22 +159,23 @@
 
   async function handlePasswordRecovery(event) {
     event.preventDefault();
-    message("Enviando solicitação de recuperação…", false);
+    message("Verificando cadastro e solicitando recuperação…", false);
     var identifier = $("recovery-identifier").value;
-    var email = resolveEmail(identifier);
-    if (!email) {
+    if (!identifier) {
       message("Informe um usuário ou e-mail válido.", true);
       return;
     }
     try {
-      if (!supabaseClient) throw new Error("Supabase não configurado.");
-      var redirectUrl = window.location.origin + "/atendeja";
-      var res = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
-      if (res.error) throw res.error;
-      message("Link de recuperação enviado para " + email + ". Verifique sua caixa de entrada.", false);
-      $("recovery-form").hidden = true;
-      $("password-login-form").hidden = false;
-      $("btn-google").hidden = false;
+      var res = await fetch("/api/admin/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: identifier })
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        throw new Error(data.error || "Não foi possível enviar o link de recuperação.");
+      }
+      message(data.message || ("Link de recuperação enviado com sucesso para " + data.email + ". Verifique sua caixa de entrada e pasta de spam."), false);
     } catch (err) {
       message(err.message || "Não foi possível enviar o link de recuperação.", true);
     }

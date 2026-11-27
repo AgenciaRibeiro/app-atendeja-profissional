@@ -868,6 +868,65 @@ async function handleAdmin(req, res, url, parts) {
     return send(res, 201, { ok: true, message: "Fundador configurado. Entre novamente para abrir o painel." });
   }
 
+  if (req.method === "POST" && route === "request-password-reset") {
+    requireServerConfig(false);
+    const body = await readBody(req);
+    const rawIdentifier = String(body.identifier || "").trim().toLowerCase();
+    if (!rawIdentifier) throw fail(400, "Informe seu usuário ou e-mail cadastrado.");
+
+    let targetEmail = rawIdentifier;
+    if (rawIdentifier === "gerente") {
+      targetEmail = "3jr.agenciadigital@gmail.com";
+    }
+
+    // Busca se existe como administrador ativo
+    const adminRows = await supabaseRest("admin_users?" + new URLSearchParams({
+      select: "id,email,name,active",
+      or: `(email.eq.${targetEmail},name.ilike.${rawIdentifier})`,
+      active: "eq.true",
+      limit: "1"
+    }).toString());
+
+    if (!Array.isArray(adminRows) || adminRows.length === 0) {
+      throw fail(404, "Este e-mail ou usuário não está cadastrado como administrador no sistema.");
+    }
+
+    const matchedAdmin = adminRows[0];
+    const registeredEmail = matchedAdmin.email;
+
+    try {
+      const recoverRes = await fetch(SUPABASE_URL + "/auth/v1/recover", {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: registeredEmail,
+          options: {
+            redirectTo: "https://atendeja.minhaempresaautonoma.online/atendeja"
+          }
+        })
+      });
+
+      if (!recoverRes.ok) {
+        const errJson = await recoverRes.json().catch(() => ({}));
+        if (recoverRes.status === 429) {
+          throw fail(429, "Muitas tentativas em pouco tempo. Por segurança, aguarde 60 segundos antes de solicitar novamente.");
+        }
+        throw fail(recoverRes.status, errJson.msg || errJson.error_description || "Falha ao enviar e-mail de recuperação.");
+      }
+
+      return send(res, 200, {
+        ok: true,
+        email: registeredEmail,
+        message: "Link de recuperação enviado com sucesso para " + registeredEmail + ". Verifique sua caixa de entrada e pasta de spam."
+      });
+    } catch (err) {
+      throw fail(err.status || 500, err.message || "Erro ao processar envio do link de recuperação.");
+    }
+  }
+
   const { user, admin } = await requireAdmin(req);
   if (req.method === "GET" && route === "me") return send(res, 200, { id: user.id, email: user.email, role: admin.role });
   if (req.method === "GET" && route === "clients") {
