@@ -871,7 +871,7 @@ async function handleAdmin(req, res, url, parts) {
   if (req.method === "POST" && route === "request-password-reset") {
     requireServerConfig(false);
     const body = await readBody(req);
-    const rawIdentifier = String(body.identifier || "").trim().toLowerCase();
+    const rawIdentifier = String(body.identifier || body.email || "").trim().toLowerCase();
     if (!rawIdentifier) throw fail(400, "Informe seu usuário ou e-mail cadastrado.");
 
     let targetEmail = rawIdentifier;
@@ -1355,7 +1355,7 @@ async function handlePaymentWebhook(req, res) {
   if (req.method !== "POST") throw fail(405, "Método não permitido");
   if (!PAYMENT_WEBHOOK_SECRET) throw fail(503, "Webhook de pagamento não configurado");
   const raw = await readRawBody(req);
-  const supplied = String(req.headers["x-atendeja-signature"] || "").replace(/^sha256=/i, "");
+  const supplied = String(req.headers["x-atendeja-signature"] || req.headers["x-webhook-signature"] || "").replace(/^sha256=/i, "");
   const expected = crypto.createHmac("sha256", PAYMENT_WEBHOOK_SECRET).update(raw).digest();
   let provided;
   try { provided = Buffer.from(supplied, "hex"); } catch (_e) { provided = Buffer.alloc(0); }
