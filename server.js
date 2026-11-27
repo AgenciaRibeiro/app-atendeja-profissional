@@ -1394,7 +1394,7 @@ async function serveStatic(req, res, pathname) {
   if (urlPath === "/admin" || urlPath === "/atendeja" || urlPath === "/gerenciar-atendeja") urlPath = "/admin.html";
   if (urlPath === "/dashboard" || /^\/(?:login|gerenciar)-[a-z0-9_-]+$/i.test(urlPath)) urlPath = "/dashboard.html";
 
-  const singleSlugMatch = urlPath.match(/^\/([a-zA-Z0-9_-]{3,60})$/);
+  const singleSlugMatch = urlPath.match(/^\/([a-zA-Z0-9_-]{2,60})$/);
   if (singleSlugMatch) {
     const slug = singleSlugMatch[1].toLowerCase();
     const reserved = new Set([

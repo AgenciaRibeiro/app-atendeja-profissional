@@ -52,6 +52,12 @@ async function run() {
     assert.strictEqual(slugRes.headers.location, "/login-paulopintor");
     console.log("[PASSOU] Rota /paulopintor redireciona via HTTP 302 para /login-paulopintor");
 
+    // 3.1 Slug curto (2 caracteres): /jr (deve redirecionar 302 para /login-jr)
+    const jrSlugRes = await request("/jr");
+    assert.strictEqual(jrSlugRes.status, 302);
+    assert.strictEqual(jrSlugRes.headers.location, "/login-jr");
+    console.log("[PASSOU] Rota curta /jr redireciona via HTTP 302 para /login-jr");
+
     // 4. Client login page: /login-paulopintor
     const loginSlugRes = await request("/login-paulopintor");
     assert.strictEqual(loginSlugRes.status, 200);
