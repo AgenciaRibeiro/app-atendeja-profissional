@@ -1856,6 +1856,31 @@
     applySessionState();
   });
 
+  var clientLoginForm = $("client-password-login-form");
+  if (clientLoginForm) {
+    clientLoginForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var email = ($("client-login-email") ? $("client-login-email").value : "").trim();
+      var password = ($("client-login-password") ? $("client-login-password").value : "").trim();
+      var note = $("auth-note");
+      if (!email || !password) {
+        if (note) { note.textContent = "Informe e-mail e senha para acessar."; note.classList.add("error"); }
+        return;
+      }
+      if (window.ATENDEJA_AUTH && window.ATENDEJA_AUTH.signInPassword) {
+        if (note) { note.textContent = "Autenticando…"; note.classList.remove("error"); }
+        try {
+          await window.ATENDEJA_AUTH.signInPassword(email, password);
+        } catch (err) {
+          if (note) { note.textContent = err.message || "Credenciais inválidas. Verifique seu e-mail e senha."; note.classList.add("error"); }
+        }
+        return;
+      }
+      try { localStorage.setItem(KEYS.SESSION, "true"); } catch (_e) {}
+      applySessionState();
+    });
+  }
+
   document.addEventListener("atendeja:cloud-profile", function (event) {
     if (!event.detail) return;
     tenant = Object.assign({}, tenant, event.detail);

@@ -121,6 +121,12 @@
       });
       if (result.error) throw result.error;
     },
+    async signInPassword(email, password) {
+      if (!enabled || !client) throw new Error("Serviço de autenticação pendente no servidor.");
+      var result = await client.auth.signInWithPassword({ email: email, password: password });
+      if (result.error) throw result.error;
+      await applySession(result.data && result.data.session);
+    },
     async signOut() {
       if (!client) return;
       var result = await client.auth.signOut();
