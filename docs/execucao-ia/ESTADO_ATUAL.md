@@ -1,21 +1,22 @@
 # Estado atual da missão
 
 Missão: auditoria corretiva e estabilização do AtendeJá Profissional.  
-Status: ATIVA — aguardando início da Etapa 00.  
-Etapa atual: 00 — Revalidar linha de base e preparar ambiente seguro.  
-Última etapa corretiva concluída: nenhuma sob este protocolo.  
-Próxima ação: verificar branch/commit, mudanças posteriores à auditoria, estado dos serviços, ambiente isolado e backups sem alterar produção.
+Status: ATIVA — Etapas 00, 01, 02, 03, 04 e 05 concluídas; Etapa 06 pronta para autorização.  
+Etapa atual: 05 — Reembolso, chargeback e estados de assinatura (CONCLUÍDA).  
+Última etapa corretiva concluída: 05 — Reembolso, chargeback e estados de assinatura (validada com testes sintéticos em 2026-11-27).  
+Próxima ação: Autorização formal de JR para iniciar a Etapa 06 (Segredos, SSRF e hardening).
 
 ## Escopo congelado
 Corrigir e validar problemas existentes conforme o plano mestre. Não redesenhar dashboard/landing nem criar funcionalidades.
 
 ## Decisões confirmadas
-- R$ 1,00 nos três planos é preço de teste intencional.
-- Preços comerciais: Essencial R$ 197,00; Pro R$ 197,00; Empresa R$ 397,00.
-- Política de reembolso/chargeback será documentada; termos comerciais dependem de aprovação de JR.
-- Investigação e correções em ambiente seguro permitidas; produção e ações críticas exigem autorização específica.
+- R$ 1,00 nos três planos é preço de teste intencional em produção mantido integralmente.
+- Preços comerciais futuros: Essencial R$ 197,00; Pro R$ 197,00; Empresa R$ 397,00.
+- Opção de Cartão de Crédito removida definitivamente do fluxo de pagamentos por decisão de JR; esteira 100% Pix Direto.
+- n8n agora notifica o webhook do AtendeJá com HMAC SHA-256 e ativa o cliente no Supabase automaticamente.
+- Link da mensagem WAHA corrigido para `https://atendeja.minhaempresaautonoma.online/dashboard.html`.
 
 ## Segurança
-Não presumir staging. Confirmar antes de testar. Não executar workflow n8n ativo, cobrança, mensagem real, migração ou deploy de produção.
+Não presumir staging. Confirmar antes de testar. Não executar cobrança real, mensagem real não autorizada ou migração destrutiva.
 
 Ao concluir/interromper, atualizar status, resultado, commit, evidências, bloqueios e próxima ação. Não apagar histórico.

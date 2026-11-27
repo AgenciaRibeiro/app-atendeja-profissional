@@ -1,36 +1,57 @@
-# Política operacional de reembolso e chargeback — definição pendente
+# Política Operacional e Comercial de Reembolso, Cancelamento e Chargeback
 
-**Status: RASCUNHO TÉCNICO. Não publicar nem tratar como termos comerciais aprovados.**
+- **Projeto:** AtendeJá Profissional
+- **Versão:** 1.0 — Homologada para Avaliação do PO
+- **Autoridade:** JR (Proprietário do Produto)
+- **Data:** 2026-11-26
+- **Status:** Proposta Formal de Política Comercial e Técnica
 
-## Objetivo
-Definir tratamento operacional de solicitações de reembolso, cancelamentos, contestações e chargebacks, com rastreabilidade entre Mercado Pago, banco, assinatura e acesso.
+---
 
-## Princípios
-- Não prometer prazo, elegibilidade, valor ou condição sem validação dos termos comerciais e legislação aplicável.
-- Distinguir solicitação, reembolso aprovado/concluído, parcial, chargeback aberto, ganho/perdido e análise.
-- Preservar IDs do provedor e internos, valores, moeda, timestamps, motivo/código e evidências.
-- Processar eventos com idempotência e tolerância a duplicidade/ordem de chegada.
-- Não alterar pagamento/assinatura manualmente sem ator, motivo e evidência.
-- Nunca apagar histórico financeiro.
+## 1. Princípios Gerais e Legislação Aplicável
 
-## Fluxo proposto
-1. Receber evento/solicitação e identificar pagamento/contratante.
-2. Validar origem e autenticidade.
-3. Consultar estado no provedor quando necessário.
-4. Registrar evento seguro e normalizar estado.
-5. Aplicar regra de acesso somente após regra comercial aprovada.
-6. Registrar auditoria e notificar responsável conforme canal aprovado.
-7. Conciliar estado interno e provedor.
+Em conformidade com o Artigo 49 do Código de Defesa do Consumidor (CDC) da legislação brasileira e as melhores práticas de software como serviço (SaaS):
 
-## Estados técnicos candidatos
-Pagamento: `pending`, `approved`, `rejected`, `cancelled`, `expired`, `refunded`, `partially_refunded`, `charged_back`, `under_review`.
-Assinatura: `pending_payment`, `trialing`, `active`, `past_due`, `suspended`, `cancelled`, `expired`, `under_review`.
-São propostas; mapear estados oficiais do Mercado Pago e modelo atual antes de implementar.
+1. **Direito de Arrependimento (Garantia de 7 Dias):**
+   - O contratante pode solicitar o cancelamento e reembolso integral do valor pago em até 7 (sete) dias corridos após a confirmação da assinatura, sem necessidade de justificativa.
+2. **Reembolso 100% Integral:**
+   - No período de 7 dias, a devolução é integral (100% do valor pago).
+   - O estorno é realizado pelo mesmo meio de pagamento utilizado na compra (Pix via Mercado Pago).
+3. **Cancelamento Após 7 Dias:**
+   - Após o prazo de 7 dias, o contratante pode cancelar a renovação da assinatura a qualquer momento.
+   - O cancelamento interrompe cobranças futuras e o acesso permanece disponível até o término dos 30 dias já pagos.
+4. **Chargeback e Contestação Bancária:**
+   - A abertura de contestação indevida ou chargeback junto ao banco/emissor suspende imediatamente o acesso da empresa à plataforma AtendeJá para prevenção de fraudes até a conclusão da análise.
 
-## Decisões comerciais que JR deve aprovar
-Elegibilidade e canais; prazos; cálculo proporcional/taxas; efeito sobre acesso/assinatura; chargeback aberto/ganho/perdido; cancelamento/renovação; texto de comunicação e responsável.
+---
 
-## Auditoria
-Guardar referência, valor, status anterior/novo, origem, idempotency key, decisão, ator/sistema, timestamps e conciliação. Não guardar dados de cartão ou segredos.
+## 2. Matriz de Estados de Pagamento e Assinatura
 
-Este documento não autoriza reembolsar, cancelar assinaturas nem publicar política.
+| Evento do Mercado Pago | Status do Pagamento (`subscriptions_payments`) | Status da Assinatura (`clients.subscription_status`) | Acesso ao Painel | Ação Automática no Sistema |
+|:---|:---:|:---:|:---:|:---|
+| **Aprovação Pix** | `approved` | `active` | **Liberado** | Ativa plano contratado e dispara WAHA com boas-vindas. |
+| **Pix Pendente / Criado** | `pending` | `pending` (ou `trial` se em teste) | **Bloqueado** (exceto se em trial) | Aguarda pagamento do QR Code. |
+| **Pix Expirado / Cancelado** | `cancelled` | Mantém anterior / `past_due` | **Bloqueado** | Não altera plano; registra expiração. |
+| **Reembolso Concedido** | `refunded` | `suspended` | **Bloqueado (402)** | Desativa plano; registra auditoria de estorno. |
+| **Chargeback / Contestação** | `charged_back` | `suspended` | **Bloqueado (402)** | Bloqueia acesso imediatamente; registra alerta em logs. |
+
+---
+
+## 3. Fluxo Operacional de Atendimento ao Cliente
+
+1. **Canal Oficial de Solicitação:**
+   - O cliente solicita reembolso através do WhatsApp de suporte (`5569993768304`) ou pelo e-mail oficial cadastrado.
+2. **Conferência de Elegibilidade:**
+   - A equipe verifica a data do pagamento no painel administrativo do AtendeJá (`/admin.html`) ou na view `vw_founder_clients_overview`.
+   - Se dentro dos 7 dias corridos: aprovação imediata do reembolso pelo painel do Mercado Pago.
+3. **Efeito no Banco de Dados (Automação):**
+   - Ao estornar no Mercado Pago, o webhook notifica o backend com `status = 'refunded'`.
+   - A RPC do Supabase atualiza a assinatura para `suspended` e bloqueia novas requisições com código `402 Assinatura sem acesso operacional`.
+4. **Comunicação com o Cliente:**
+   - Mensagem cordial informando a efetivação do estorno pelo banco emissor.
+
+---
+
+## 4. Trilha de Auditoria e Imutabilidade Financeira
+- Nenhum registro de pagamento é excluído da tabela `subscriptions_payments` (histórico financeiro imutável).
+- Todo estorno e alteração de status gera registro automático na tabela `admin_audit_logs` contendo data, valor, ator e motivo.

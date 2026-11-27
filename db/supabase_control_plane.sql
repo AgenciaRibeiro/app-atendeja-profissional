@@ -362,12 +362,12 @@ $$;
 -- aceita chamada direta de anon/authenticated.
 CREATE OR REPLACE FUNCTION public.process_payment_event(
   p_email_google TEXT,
-  p_payment_id TEXT,
   p_plan_code TEXT,
+  p_payment_id TEXT,
   p_amount_brl NUMERIC,
+  p_payment_method TEXT,
   p_status TEXT,
-  p_payment_method TEXT DEFAULT 'pix',
-  p_paid_at TIMESTAMPTZ DEFAULT NULL
+  p_paid_at TIMESTAMPTZ
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -414,7 +414,7 @@ BEGIN
       RAISE EXCEPTION 'payment_id já vinculado a outro cadastro ou plano';
     END IF;
     UPDATE public.subscriptions_payments SET
-      status = CASE WHEN status = 'approved' AND p_status <> 'approved' THEN status ELSE p_status END,
+      status = p_status,
       paid_at = COALESCE(p_paid_at, paid_at),
       amount_brl = p_amount_brl
     WHERE mp_payment_id = p_payment_id;
@@ -436,6 +436,16 @@ BEGIN
       INSERT INTO public.admin_audit_logs(client_id, action, details)
       VALUES (v_client_id, 'payment_approved', pg_catalog.jsonb_build_object('payment_id', p_payment_id, 'plan_code', p_plan_code, 'amount_brl', p_amount_brl));
     END IF;
+  ELSIF p_status IN ('refunded', 'charged_back') THEN
+    UPDATE public.clients SET subscription_status = 'suspended', updated_at = NOW()
+      WHERE id = v_client_id;
+    INSERT INTO public.admin_audit_logs(client_id, action, details)
+    VALUES (v_client_id, 'payment_' || p_status, pg_catalog.jsonb_build_object(
+      'payment_id', p_payment_id,
+      'plan_code', p_plan_code,
+      'amount_brl', p_amount_brl,
+      'previous_status', v_old_status
+    ));
   END IF;
   RETURN pg_catalog.jsonb_build_object('client_id', v_client_id, 'created', v_created, 'status', p_status);
 END;

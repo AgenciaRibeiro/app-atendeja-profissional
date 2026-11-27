@@ -4,12 +4,12 @@ Não reordenar sem justificativa documentada e decisão de JR.
 
 | Ordem | Etapa | Status |
 |---:|---|---|
-| 00 | Revalidar baseline e preparar ambiente seguro | EM_ANDAMENTO |
-| 01 | Integridade PostgreSQL e migrações | AGUARDANDO |
-| 02 | Backup e recuperação | AGUARDANDO |
-| 03 | Segurança multi-tenant e autorização | AGUARDANDO |
-| 04 | Pagamentos Mercado Pago, backend e n8n | AGUARDANDO |
-| 05 | Reembolso, chargeback e estados de assinatura | AGUARDANDO |
+| 00 | Revalidar baseline e preparar ambiente seguro | CONCLUÍDA |
+| 01 | Integridade PostgreSQL e migrações | CONCLUÍDA |
+| 02 | Backup e recuperação | CONCLUÍDA |
+| 03 | Segurança multi-tenant e autorização | CONCLUÍDA |
+| 04 | Pagamentos Mercado Pago, backend e n8n | CONCLUÍDA |
+| 05 | Reembolso, chargeback e estados de assinatura | CONCLUÍDA |
 | 06 | Segredos, SSRF e hardening | AGUARDANDO |
 | 07 | Limites por plano e rate limit | AGUARDANDO |
 | 08 | WhatsApp/WAHA e automações | AGUARDANDO |
