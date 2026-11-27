@@ -484,11 +484,6 @@
     $("p-kpi-pipe-meta").textContent = openPipe.length + " em negociação";
     $("p-kpi-retornos").textContent = String(due.length);
 
-    // Atualiza KPIs da barra lateral
-    if ($("kpi-leads-count")) $("kpi-leads-count").textContent = String(leads.length);
-    if ($("kpi-faturamento")) $("kpi-faturamento").textContent = formatBrl(closedSum);
-    if ($("kpi-conversas")) $("kpi-conversas").textContent = String(leads.filter(function (l) { return l.status === "atendimento"; }).length);
-
     // Serviços vendidos
     var srvMap = {};
     var sourceForServices = closed.length ? closed : leads;
